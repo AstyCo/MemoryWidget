@@ -16,13 +16,13 @@ SOURCES += main.cpp\
         memorywidget.cpp \
     memoryview.cpp \
     memoryitem.cpp \
-    aspectratiowidget.cpp \
-    memoryscene.cpp
+    memoryscene.cpp \
+    appeventfilter.cpp
 
 HEADERS  += memorywidget.h \
     memoryview.h \
     memoryitem.h \
-    aspectratiowidget.h \
-    memoryscene.h
+    memoryscene.h \
+    appeventfilter.h
 
 FORMS    +=

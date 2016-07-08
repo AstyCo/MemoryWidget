@@ -36,20 +36,24 @@ public:
     void changeColors(int fromRow, int fromCol,
                       int toRow, int toCol,     const QColor& newColor);
 
-public slots:
+    bool labels() const;
+    void setLabels(bool labels);
 
+private:
     int toColumn(int index) const;
     int toRow(int index) const;
 
     int fromPos(int row,int column) const;
+    int toMemoryAdress(int row,int column) const;
+    int toMemoryAdress(int pos) const;
 
     void setupMatrix(MemoryColorsList records);
-
 private:
 
     QGraphicsLayout *layout();
 
     int m_itemPerRow;
+    bool m_labels;
 };
 
 #endif // MEMORYWIDGET_H
