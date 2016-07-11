@@ -7,6 +7,9 @@
 #include <QColor>
 #include <QList>
 
+#include <QStatusBar>
+#include <QLabel>
+
 
 struct MemoryRecord
 {
@@ -39,6 +42,8 @@ public:
     bool labels() const;
     void setLabels(bool labels);
 
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
 private:
     int toColumn(int index) const;
     int toRow(int index) const;
@@ -54,6 +59,12 @@ private:
 
     int m_itemPerRow;
     bool m_labels;
+    qreal m_spacing;
+public:
+    QStatusBar* m_statusBar;
+    QLabel * m_info1, *m_info2;
+
+
 };
 
 #endif // MEMORYWIDGET_H

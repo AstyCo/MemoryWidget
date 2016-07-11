@@ -17,12 +17,18 @@ SOURCES += main.cpp\
     memoryview.cpp \
     memoryitem.cpp \
     memoryscene.cpp \
-    appeventfilter.cpp
+    appeventfilter.cpp \
+    labelitem.cpp \
+    memoryitemgroup.cpp
 
 HEADERS  += memorywidget.h \
     memoryview.h \
     memoryitem.h \
     memoryscene.h \
-    appeventfilter.h
+    appeventfilter.h \
+    globalvalues.hpp \
+    labelitem.hpp \
+    memoryitemgroup.h
 
-FORMS    +=
+FORMS    += \
+    form.ui

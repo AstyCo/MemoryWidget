@@ -13,6 +13,10 @@ public:
 private:
 
     qreal m_viewRatio;
+
+    qreal m_itemEdgeLength;
+    qreal m_itemBorderWidth;
+
 };
 
 #endif // MEMORYVIEW_H

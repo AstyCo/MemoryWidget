@@ -11,6 +11,8 @@
 
 #include <QEvent>
 
+#include <QGraphicsItemGroup>
+extern QGraphicsItemGroup* it_group;
 
 
 int main(int argc, char *argv[])
@@ -20,10 +22,12 @@ int main(int argc, char *argv[])
 //    a.installEventFilter(new AppEventFilter);
 
     MemoryWidget *memoryWidget = new MemoryWidget;
-    QGraphicsScene scene;
+    MemoryScene scene;
 
     scene.setBackgroundBrush(QBrush(Qt::gray));
     scene.addItem(memoryWidget);
+    scene.addItem(it_group);
+    qDebug()<< scene.items().size();
 
     MemoryView view(&scene);
     view.setMaximumSize(1920,1680);
