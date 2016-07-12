@@ -15,14 +15,15 @@ public:
     MemoryUnit(QGraphicsItem *parent = 0);
 
     QRectF boundingRect() const;
+    QPainterPath shape() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
         QWidget *widget = 0);
 
     int unitId() const;
     void setUnitId(int unitId);
 
-    Memory::MemoryStatus status() const;
-    void setStatus(const Memory::MemoryStatus &status);
+    Memory::MemoryState state() const;
+    void setState(const Memory::MemoryState &state);
 
     long start() const;
     void setStart(long start);
@@ -30,10 +31,18 @@ public:
     long finish() const;
     void setFinish(long finish);
 
+    long size() const;
+
+    qreal spacing() const;
+
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
 
     bool unitSelected() const;
     void setUnitSelected(bool unitSelected);
+
+    QColor color() const;
 
 
 private:
@@ -46,7 +55,7 @@ private:
     bool m_unitSelected;
 
     int m_unitId;
-    Memory::MemoryStatus m_status;
+    Memory::MemoryState m_state;
 
     QPainterPath m_shapeBorder;
     QPen m_borderPen;

@@ -14,16 +14,7 @@
 #include <QLabel>
 
 
-struct MemoryRecord
-{
-    int x,y;
-    QColor color;
-};
-typedef QList<MemoryRecord> MemoryRecordsList;
-
-
-typedef QList<QColor> MemoryColorsList;
-
+class MemoryStatus;
 
 class MemoryWidget : public QGraphicsWidget
 {
@@ -35,12 +26,6 @@ public:
 
     int itemPerRow() const;
     void setItemPerRow(int itemPerRow);
-    void changeColor(int x,int y,const QColor& newColor);
-    void changeColor(int pos,const QColor& newColor);
-    void changeColors(const MemoryRecordsList& records);
-    void changeColors(int fromPos, int toPos,   const QColor& newColor);
-    void changeColors(int fromRow, int fromCol,
-                      int toRow, int toCol,     const QColor& newColor);
     void setupMatrix(QList<MemoryItem*> records);
 
     bool labels() const;
@@ -49,7 +34,16 @@ public:
     qreal spacing() const;
     void setSpacing(const qreal &spacing);
 
+    void setStatusLabel(const QString& text);
+    QString statusLabel() const;
+    void setItemInfo(const QString& text);
+    QString itemInfo() const;
+    void setUnitInfo(const QString& text);
+    QString unitInfo() const;
+
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+    void memoryStatusUpdate(const QRectF& rect = QRectF());
 
 private:
     int toColumn(int index) const;
@@ -66,9 +60,7 @@ private:
     int m_itemPerRow;
     bool m_labels;
     qreal m_spacing;
-public:
-    QStatusBar* m_statusBar;
-    QLabel * m_info1, *m_info2;
+    MemoryStatus* m_memoryStatus;
 };
 
 #endif // MEMORYWIDGET_HPP

@@ -9,6 +9,13 @@ MemoryView::MemoryView(QGraphicsScene * scene, QWidget * parent)
     : QGraphicsView(scene,parent)
 {
     setContentsMargins(0, 0, 0, 0);
+
+    m_memoryScene=dynamic_cast<MemoryScene*>(scene);
+    if(!m_memoryScene)
+    {
+        qWarning(QObject::tr("MemoryView should be installed on MemoryScene").toLatin1().data());
+    }
+
     qreal height = scene->sceneRect().height(),
           width = scene->sceneRect().width();
 
@@ -21,6 +28,9 @@ MemoryView::MemoryView(QGraphicsScene * scene, QWidget * parent)
 
 void MemoryView::resizeEvent(QResizeEvent *event)
 {
+    QSizeF newSize = event->size();
+    m_memoryScene->viewResized(newSize);
+
 //    fitInView(scene()->sceneRect(),Qt::KeepAspectRatio);
     QGraphicsView::resizeEvent(event);
 }

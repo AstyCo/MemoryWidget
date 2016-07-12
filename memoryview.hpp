@@ -4,6 +4,8 @@
 #include <QGraphicsView>
 #include <QtCore>
 
+class MemoryScene;
+
 class MemoryView : public QGraphicsView
 {
 public:
@@ -16,6 +18,8 @@ private:
 
     qreal m_itemEdgeLength;
     qreal m_itemBorderWidth;
+
+    MemoryScene *m_memoryScene;
 
 };
 

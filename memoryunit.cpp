@@ -1,6 +1,8 @@
 #include "memoryunit.hpp"
 #include "memoryscene.hpp"
 
+#include "memoryitempresentation.hpp"
+
 #include "globalvalues.hpp"
 
 #include <QPainterPath>
@@ -8,19 +10,28 @@
 
 #include <QDebug>
 
+extern MemoryScene* mem_scene;
+
 MemoryUnit::MemoryUnit(QGraphicsItem *parent /*= 0*/)
-    : QGraphicsItem(parent), m_borderPen(QBrush(Qt::blue),DEFAULT_SPACING ,Qt::SolidLine,Qt::SquareCap,Qt::MiterJoin)
+    : QGraphicsItem(parent)
 {
 //    setFlag(QGraphicsItem::ItemHasNoContents);
     setUnitSelected(false);
     setAcceptsHoverEvents(true);
 
     setZValue(1000);
+
+    m_borderPen=QPen(QBrush(Qt::blue), spacing() ,Qt::SolidLine,Qt::SquareCap,Qt::MiterJoin);
 }
 
 QRectF MemoryUnit::boundingRect() const
 {
-    return childrenBoundingRect().adjusted(-DEFAULT_SPACING,-DEFAULT_SPACING,DEFAULT_SPACING,DEFAULT_SPACING);
+    return childrenBoundingRect().adjusted(-spacing()*1.5,-spacing()*1.5,spacing()*1.5,spacing()*1.5);
+}
+
+QPainterPath MemoryUnit::shape() const
+{
+    return m_shapeBorder;
 }
 
 void MemoryUnit::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -29,7 +40,8 @@ void MemoryUnit::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     Q_UNUSED(widget);
 
 
-//    qDebug()<<childItems().size();
+
+
 
     if(!unitSelected())
         // Don't draw
@@ -37,8 +49,9 @@ void MemoryUnit::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
 
 //    QPen pen(QBrush(Qt::blue),DEFAULT_SPACING ,Qt::SolidLine,Qt::SquareCap,Qt::MiterJoin);
     painter->setPen(m_borderPen);
-    painter->setOpacity(0.8);
+    painter->setOpacity(0.3);
     painter->drawPath(m_shapeBorder);
+//    qDebug() << m_shapeBorder;
 }
 
 int MemoryUnit::unitId() const
@@ -51,14 +64,14 @@ void MemoryUnit::setUnitId(int unitId)
     m_unitId = unitId;
 }
 
-Memory::MemoryStatus MemoryUnit::status() const
+Memory::MemoryState MemoryUnit::state() const
 {
-    return m_status;
+    return m_state;
 }
 
-void MemoryUnit::setStatus(const Memory::MemoryStatus &status)
+void MemoryUnit::setState(const Memory::MemoryState &status)
 {
-    m_status = status;
+    m_state = status;
 }
 
 long MemoryUnit::start() const
@@ -81,32 +94,44 @@ void MemoryUnit::setFinish(long finish)
     m_finish = finish;
 }
 
+long MemoryUnit::size() const
+{
+    return m_finish-m_start + 1;
+}
+
+qreal MemoryUnit::spacing() const
+{
+    MemoryScene* p_memScene = dynamic_cast<MemoryScene*>(scene());
+    if(!p_memScene)
+        return DEFAULT_SPACING;
+    return p_memScene->spacing();
+}
+
 QVariant MemoryUnit::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value)
 {
-//    if(!value.canConvert<QGraphicsItem*>())
-//    {
-//        qDebug() << "can't convert to QGraphicsItem*";
-//        qDebug() << value;
-//        qDebug() << '-';
-//        return QVariant();
-//    }
     MemoryItem* p_mem = dynamic_cast<MemoryItem*>(value.value<QGraphicsItem*>());
     if(!p_mem)
     {
-//        qDebug() << "MemoryUnit::itemChange p_mem is NULL";
-        return QVariant();
+        return QGraphicsItem::itemChange(change,value);
     }
-    else
-    {
-//        qDebug() << "MemoryUnit::itemChange p_mem is not NULL";
-    }
+
     if(change == QGraphicsItem::ItemChildAddedChange)
     {
+        if(m_unitId)
+        {
+//            qDebug() << "append to "+QString::number(m_unitId);
+        }
         m_items.append(p_mem);
+        update();
     }
     else if (change == QGraphicsItem::ItemChildRemovedChange)
     {
+        if(m_unitId)
+        {
+//            qDebug() << "remove from "+QString::number(m_unitId);
+        }
         m_items.removeOne(p_mem);
+        update();
     }
 
     rebuildPath();
@@ -114,9 +139,20 @@ QVariant MemoryUnit::itemChange(QGraphicsItem::GraphicsItemChange change, const 
     return QGraphicsItem::itemChange(change,value); // MAYBE change to QVariant()
 }
 
+void MemoryUnit::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+{
+//    qDebug() << "hoverEnter";
+
+    return QGraphicsItem::hoverEnterEvent(event);
+}
+
+void MemoryUnit::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
+{
+    return QGraphicsItem::hoverLeaveEvent(event);
+}
+
 void MemoryUnit::rebuildPath()
 {
-
     if(m_items.isEmpty())
     {
         setShapeBorder(QPainterPath());
@@ -150,7 +186,7 @@ void MemoryUnit::rebuildPath()
                 utterLeftItem = item;
             }
         }
-        else if(itemBottom == bottom)
+        if(itemBottom == bottom)
         {
             // element of first row
             qreal itemRight = item->geometry().right();
@@ -173,20 +209,53 @@ void MemoryUnit::rebuildPath()
     MemoryScene* p_memScene = dynamic_cast<MemoryScene*>(scene());
     if(!p_memScene)
     {
-        qDebug() << "not MemoryScene";
+//        qDebug() << "not MemoryScene";
         return ;
     }
 
     qreal halfSpacing = p_memScene->spacing() / 2;
 
+    bool shapingTop = false,
+         shapingBottom = false,
+         shapingSeparate = false;
+    if(utterLeftItem->geometry().left()!=childrenBoundingRect().left())
+        shapingTop = true;
+    if(utterRightItem->geometry().right()!=childrenBoundingRect().right())
+        shapingBottom = true;
+    if(size()<p_memScene->itemPerRow()
+            && utterLeft>utterRight)
+        shapingSeparate = true;
+
     path.moveTo(utterLeftItem->geometry().topLeft()+QPointF(-halfSpacing,-halfSpacing));
     path.lineTo(childrenBoundingRect().topRight()+QPointF(+halfSpacing,-halfSpacing));
-    path.lineTo(QPointF(childrenBoundingRect().right()+halfSpacing,utterRightItem->geometry().top()-halfSpacing));
-    path.lineTo(utterRightItem->geometry().topRight()+QPointF(+halfSpacing,-halfSpacing));
+
+    if(shapingBottom)
+    {
+        path.lineTo(QPointF(childrenBoundingRect().right()+halfSpacing,utterRightItem->geometry().top()-halfSpacing));
+        if(shapingSeparate)
+        {
+            path.lineTo(utterLeftItem->geometry().bottomLeft()+QPointF(-halfSpacing,+halfSpacing));
+            path.moveTo(utterRightItem->geometry().topRight()+QPointF(+halfSpacing,-halfSpacing));
+        }
+        else
+            path.lineTo(utterRightItem->geometry().topRight()+QPointF(+halfSpacing,-halfSpacing));
+    }
+
     path.lineTo(utterRightItem->geometry().bottomRight()+QPointF(+halfSpacing,+halfSpacing));
     path.lineTo(childrenBoundingRect().bottomLeft()+QPointF(-halfSpacing,+halfSpacing));
-    path.lineTo(QPointF(childrenBoundingRect().left()-halfSpacing,utterLeftItem->geometry().bottom()+halfSpacing));
-    path.lineTo(utterLeftItem->geometry().bottomLeft()+QPointF(-halfSpacing,+halfSpacing));
+
+    if(shapingTop)
+    {
+        path.lineTo(QPointF(childrenBoundingRect().left()-halfSpacing,utterLeftItem->geometry().bottom()+halfSpacing));
+        if(shapingSeparate)
+        {
+            path.lineTo(utterRightItem->geometry().topRight()+QPointF(+halfSpacing,-halfSpacing));
+            path.moveTo(utterLeftItem->geometry().bottomLeft()+QPointF(-halfSpacing,+halfSpacing));
+        }
+        else
+            path.lineTo(utterLeftItem->geometry().bottomLeft()+QPointF(-halfSpacing,+halfSpacing));
+    }
+
     path.lineTo(utterLeftItem->geometry().topLeft()+QPointF(-halfSpacing,-halfSpacing));
 
     setShapeBorder(path);
@@ -210,6 +279,11 @@ bool MemoryUnit::unitSelected() const
 void MemoryUnit::setUnitSelected(bool unitSelected)
 {
     m_unitSelected = unitSelected;
+}
+
+QColor MemoryUnit::color() const
+{
+    return MemoryState_to_QColor(m_state);
 }
 
 

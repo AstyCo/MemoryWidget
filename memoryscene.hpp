@@ -12,6 +12,7 @@
 
 #include <QLabel>
 
+QT_FORWARD_DECLARE_CLASS(QStatusBar);
 
 
 class MemoryScene : public QGraphicsScene
@@ -24,17 +25,30 @@ public:
     qreal spacing() const;
     void setSpacing(const qreal &spacing);
 
-    void init(const QList<MemoryItemPresentation>& mem_it_list);
+    void init(const QList<MemoryItemPresentation>& mem_it_list,long memorySize);
 
     MemoryUnit* newUnit(int unitId = -1);
-    MemoryUnit *unit(int unitId) const;
+    MemoryUnit* unit(int unitId) const;
 
     void setItemInfo(const QString& text);
     void setUnitInfo(const QString& text);
 
+    int itemPerRow() const;
+    void setItemPerRow(int newItemPerRow);
+
+    qreal itemEdge() const;
+    void setItemEdge(qreal newEdgeLength);
+
+
+    qreal itemBorder() const;
+    void setItemBorder(const qreal &itemBorder);
+
+    long memorySize() const;
+    void setMemorySize(long memorySize);
+
+    void viewResized(QSizeF viewSize);
+
 protected:
-//    void onSelectionChanged();
-//    void onChanged();
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
@@ -45,7 +59,8 @@ protected:
 private:
     void clearLastSelected();
     void setLastSelected(MemoryItem* p_mem);
-    int itemIndex(QGraphicsItem* item) const;
+    int  itemIndex(QGraphicsItem* item) const;
+    void memoryStatusUpdate(const QRectF& rect = QRectF());
 
 
     int m_lastSelectedIndex;
@@ -54,7 +69,14 @@ private:
 
     QList<MemoryUnit*> m_units;
     QList<MemoryItem*> m_items;
+    QList<MemoryUnit*> m_itemsParents;
     QMap<int , MemoryUnit*> m_unit_by_unitId;
+
+    qreal m_itemEdge;
+    qreal m_itemBorder;
+
+    long m_memorySize;
+
 
 };
 

@@ -8,12 +8,14 @@
 
 #include <QDebug>
 
+extern MemoryScene* mem_scene;
+
 MemoryItemGroup::MemoryItemGroup()
 {
     setHandlesChildEvents(false);
 
 //    setFlags(ItemIsSelectable);
-//    setAcceptsHoverEvents(true);
+    setAcceptsHoverEvents(true);
 }
 
 int MemoryItemGroup::groupId() const
@@ -126,4 +128,5 @@ QPainterPath MemoryItemGroup::shape() const
 
     return path;
 }
+
 

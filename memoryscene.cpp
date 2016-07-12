@@ -11,6 +11,10 @@ MemoryScene::MemoryScene( QObject * parent)
 {
     clearLastSelected();
 
+    setItemEdge(DEFAULT_EDGELENGTH);
+    setItemBorder(DEFAULT_BORDERWIDTH);
+
+
     m_memoryWidget = new MemoryWidget;
 
     addItem(m_memoryWidget);
@@ -19,18 +23,39 @@ MemoryScene::MemoryScene( QObject * parent)
 
     QList<MemoryItemPresentation> records;
 
-    for(int i = 0; i < 32; ++i)
+    int memoryPeaceLength,spaceBetweenUnits;
+
+    int vacantPos = 0;
+    int id = 1;
+
+    for(;;)
     {
-        for(int j = 0; j < m_memoryWidget->itemPerRow(); ++j)
-        {
-            records.push_back(MemoryItemPresentation((j==i)?(Memory::Active):(Memory::Empty),(j==i)?1:0));
-        }
+        memoryPeaceLength = qrand()%100;
+        spaceBetweenUnits = qrand()%15;
+
+        MemoryItemPresentation newPeace;
+        vacantPos+=spaceBetweenUnits;
+        newPeace.m_start=vacantPos;
+        vacantPos+=memoryPeaceLength;
+
+        if(vacantPos>2047)
+            break;
+
+        newPeace.m_finish=vacantPos;
+        vacantPos+=1;
+
+        newPeace.m_state=static_cast<MemoryState>(qrand()%Memory::StateCount);
+        if(newPeace.m_state==Memory::Empty)
+            newPeace.m_unitId=0;
+        else
+            newPeace.m_unitId=id++;
+
+
+        records.push_back(newPeace);
     }
 
-    init(records);
 
-
-
+    init(records,2048);
 }
 
 MemoryScene::~MemoryScene()
@@ -51,7 +76,6 @@ void MemoryScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
     }
     if(!p_mem)
     {
-        qDebug() <<"p_mem is NULL";
         return;
     }
     setLastSelected(p_mem);
@@ -79,7 +103,6 @@ void MemoryScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         if(!p_mem)
             return;
 
-//        qDebug() << "MemoryScene::mouseMoveEvent not NULL p_mem";
 
         int newSelectedIndex = p_mem->index();
 
@@ -93,11 +116,9 @@ void MemoryScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
             MemoryItem* p_itemAt = dynamic_cast<MemoryItem*>(sceneItems[i]);
             if(!p_itemAt)
             {
-//                qDebug() << "not MemoryItem : MemoryScene::mouseMoveEvent";
                 continue;
             }
 
-//            qDebug() << "MemoryScene::mouseMoveEvent settingSelected";
             if(p_itemAt->index()>= min && p_itemAt->index()<= max)
                 p_itemAt->setSelected(true);
         }
@@ -115,39 +136,50 @@ void MemoryScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void MemoryScene::keyPressEvent(QKeyEvent *event)
 {
-    Q_UNUSED(event);
+    return QGraphicsScene::keyPressEvent(event);
 }
 
 void MemoryScene::keyReleaseEvent(QKeyEvent *event)
 {
-    if(event->key() == Qt::Key_Shift)
-    {
-        clearLastSelected();
-    }
+    return QGraphicsScene::keyReleaseEvent(event);
 }
 
-void MemoryScene::init(const QList<MemoryItemPresentation> &mem_it_list)
+void MemoryScene::init(const QList<MemoryItemPresentation> &mem_it_list,long memSize)
 {
     MemoryUnit * p_memUnit;
+
+    setMemorySize(memSize);
+
+    for(int i = 0; i<memorySize(); ++i)
+    {
+        m_items.append(new MemoryItem(i,itemEdge(),itemBorder()));
+        m_itemsParents.append(NULL);
+    }
+
+
     for(int i = 0; i < mem_it_list.size(); ++i)
     {
-        if(!m_unit_by_unitId.contains(mem_it_list[i].m_unitId))
-        {
-            p_memUnit = new MemoryUnit(m_memoryWidget);
-            p_memUnit->setStatus(Memory::Empty);
-            p_memUnit->setUnitId(mem_it_list[i].m_unitId);
-            m_unit_by_unitId.insert(mem_it_list[i].m_unitId,p_memUnit);
-            m_units.append(p_memUnit);
-        }
-        else
-            p_memUnit = m_unit_by_unitId[mem_it_list[i].m_unitId];
+        p_memUnit = new MemoryUnit(m_memoryWidget);
+        p_memUnit->setState(mem_it_list[i].m_state);
+        p_memUnit->setUnitId(mem_it_list[i].m_unitId);
+        p_memUnit->setStart(mem_it_list[i].m_start);
+        p_memUnit->setFinish(mem_it_list[i].m_finish);
 
-        MemoryItem* p_mem = new MemoryItem(i,p_memUnit);
-        p_mem->setColor(mem_it_list[i].color());
-        m_items.append(p_mem);
+        m_unit_by_unitId.insert(mem_it_list[i].m_unitId,p_memUnit);
+        m_units.append(p_memUnit);
+
+        for(int j = 0; j<p_memUnit->size(); ++j)
+        {
+            m_itemsParents[p_memUnit->start()+j] = p_memUnit;
+        }
     }
 
     m_memoryWidget->setupMatrix(m_items);
+
+    for(int i=0;i<m_items.size();++i)
+    {
+        m_items[i]->setParentItem(m_itemsParents[i]);
+    }
 }
 
 MemoryUnit* MemoryScene::newUnit(int unitId)
@@ -167,7 +199,7 @@ MemoryUnit* MemoryScene::newUnit(int unitId)
         return m_unit_by_unitId[unitId];
 
     p_memUnit = new MemoryUnit(m_memoryWidget);
-    p_memUnit->setStatus(Memory::Empty);
+    p_memUnit->setState(Memory::Empty);
     p_memUnit->setUnitId(unitId);
     m_unit_by_unitId.insert(unitId,p_memUnit);
     m_units.append(p_memUnit);
@@ -182,24 +214,53 @@ MemoryUnit *MemoryScene::unit(int unitId) const
 
 void MemoryScene::setItemInfo(const QString &text)
 {
-    m_memoryWidget->m_info1->setText(text);
+    m_memoryWidget->setItemInfo(text);
+    memoryStatusUpdate();
 }
 
 void MemoryScene::setUnitInfo(const QString &text)
 {
-    m_memoryWidget->m_info2->setText(text);
+    m_memoryWidget->setUnitInfo(text);
+    memoryStatusUpdate();
+}
+
+//QStatusBar *MemoryScene::statusBar()
+//{
+//    return m_memoryWidget->m_statusBar;
+//}
+
+int MemoryScene::itemPerRow() const
+{
+    return m_memoryWidget->itemPerRow();
+}
+
+void MemoryScene::setItemPerRow(int newItemPerRow)
+{
+    m_memoryWidget->setItemPerRow(newItemPerRow);
+}
+
+qreal MemoryScene::itemEdge() const
+{
+    return m_itemEdge;
+}
+
+void MemoryScene::setItemEdge(qreal newEdgeLength)
+{
+    m_itemEdge = newEdgeLength;
+    foreach(MemoryItem* item, m_items)
+    {
+        item->setEdgeLength(m_itemEdge);
+    }
 }
 
 void MemoryScene::clearLastSelected()
 {
-//    qDebug() << "clearLastSelected";
     m_lastSelected = NULL;
     m_lastSelectedIndex = -1;
 }
 
 void MemoryScene::setLastSelected(MemoryItem *p_mem)
 {
-//    qDebug() << "setLastSelected";
     m_lastSelected = p_mem;
     m_lastSelectedIndex = p_mem->index();
 }
@@ -208,6 +269,49 @@ int MemoryScene::itemIndex(QGraphicsItem *item) const
 {
     return items().indexOf(item);
 }
+
+void MemoryScene::memoryStatusUpdate(const QRectF &rect)
+{
+    m_memoryWidget->memoryStatusUpdate(rect);
+}
+long MemoryScene::memorySize() const
+{
+    return m_memorySize;
+}
+
+void MemoryScene::setMemorySize(long memorySize)
+{
+    m_memorySize = memorySize;
+}
+
+void MemoryScene::viewResized(QSizeF viewSize)
+{
+    qreal viewWidth = viewSize.width();
+
+    qDebug() << spacing();
+    qDebug() << itemEdge();
+    qDebug() << itemBorder();
+
+
+    int newItemPerRow = (viewWidth-spacing())
+                              /(spacing()+itemEdge()+2*itemBorder());
+
+    qDebug() << QString::number(newItemPerRow);
+    qDebug() << viewSize;
+}
+
+qreal MemoryScene::itemBorder() const
+{
+    return m_itemBorder;
+}
+
+void MemoryScene::setItemBorder(const qreal &itemBorder)
+{
+    m_itemBorder = itemBorder;
+    foreach(MemoryItem* item,m_items)
+        item->setBorderWidth(itemBorder);
+}
+
 
 qreal MemoryScene::spacing() const
 {
@@ -218,37 +322,6 @@ void MemoryScene::setSpacing(const qreal &spacing)
 {
     m_memoryWidget->setSpacing(spacing);
 }
-
-//void MemoryScene::uniqueSelection()
-//{
-//    for(int i=0;i<lastSelection.size();++i)
-//    {
-//        for(int j = i + 1; j<lastSelection.size();++j)
-//        {
-//            if(lastSelection[i]==lastSelection[j])
-//            {
-//                qDebug() <<QString("removingAt : ")+"before : "+ QString::number(lastSelection.size());
-//                lastSelection.removeAt(j);
-//                qDebug() <<QString("removingAt : ")+"after : "+ QString::number(lastSelection.size());
-//            }
-//        }
-//    }
-//}
-
-//QGraphicsItem const *MemoryScene::findFirst(QList<QGraphicsItem*> const*list,
-//                                      QGraphicsItem const *first, QGraphicsItem const *second) const
-//{
-//    QListIterator<QGraphicsItem*> it(*list);
-//    while(it.hasNext())
-//    {
-//        QGraphicsItem * tmp = it.next();
-//        if(tmp == first)
-//            return first;
-//        if(tmp == second)
-//            return second;
-//    }
-//    return NULL;
-//}
 
 
 

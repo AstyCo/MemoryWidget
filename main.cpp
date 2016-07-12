@@ -14,9 +14,6 @@
 
 #include <QEvent>
 
-#include <QGraphicsItemGroup>
-extern QGraphicsItemGroup* it_group;
-
 MemoryScene* mem_scene;
 
 int main(int argc, char *argv[])
@@ -29,15 +26,14 @@ int main(int argc, char *argv[])
     mem_scene = &scene;
 
     scene.setBackgroundBrush(QBrush(Qt::gray));
-//    scene.addItem(it_group);
-//    qDebug()<< scene.items().size();
+
 
     MemoryView view(&scene);
     view.setMaximumSize(1920,1680);
     view.move(0,0);
 
     view.adjustSize();
-//    qDebug()<<view.size();
+
     view.setFrameStyle(0);
     view.setAlignment(Qt::AlignLeft | Qt::AlignTop);
     view.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);

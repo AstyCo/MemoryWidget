@@ -42,7 +42,7 @@ void LabelItem::paint(QPainter *painter,
 {
 //    Q_UNUSED(widget);
 
-//    qDebug()<<"paint LabelItem";
+
 
 
     QRectF squareItem( m_borderWidth, m_borderWidth, m_edgeLength, m_edgeLength);
@@ -68,9 +68,6 @@ void LabelItem::paint(QPainter *painter,
     painter->drawPath(path);
 
 //DRAW TEXT
-
-
-
     if(!m_label.isEmpty())
     {
 //        painter->setRenderHint(QPainter::TextAntialiasing,false);

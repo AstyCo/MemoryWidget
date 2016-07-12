@@ -1,6 +1,7 @@
 #include "memorywidget.hpp"
-#include "memoryitemgroup.hpp"
 #include "memoryscene.hpp"
+
+#include "memorystatus.hpp"
 
 #include "memoryitem.hpp"
 #include "labelitem.hpp"
@@ -18,106 +19,21 @@
 
 #include <QDebug>
 
-MemoryItemGroup *it_group = new MemoryItemGroup;
 
 MemoryWidget::MemoryWidget(QGraphicsWidget *parent) :
     QGraphicsWidget(parent)
 {
     setItemPerRow(64);
-    setLabels(true);
+    setLabels(false);
     m_spacing = DEFAULT_SPACING;
 
-//    setMaximumSize(1920,1680);
-
-    m_statusBar = new QStatusBar();
-    m_statusBar->setSizeGripEnabled(false);
-    m_statusBar->setStyleSheet(
-                "QStatusBar{ border: 0.5px solid black;}");
-//    m_statusBar->set
-
-    m_info1 = new QLabel();
-    m_info2 = new QLabel();
-    m_info1->setText(tr("info1"));
-    m_info2->setText(tr("info2"));
-    m_info1->setAlignment(Qt::AlignCenter);
-    m_info2->setAlignment(Qt::AlignCenter);
-
-    QLabel* statusBarLabel = new QLabel();
-    statusBarLabel->setText(tr("Info: "));
-    m_statusBar->addPermanentWidget(statusBarLabel,0);
-    m_statusBar->addPermanentWidget(m_info1,1);
-    m_statusBar->addPermanentWidget(m_info2,1);
+    m_memoryStatus = NULL;
 }
 
 MemoryWidget::~MemoryWidget()
 {
 }
 
-void MemoryWidget::changeColor(int x, int y, const QColor &newColor)
-{
-    if(!layout())
-    {
-        qDebug()<<"layout is 0";
-        return;
-    }
-    MemoryItem* p_mem = dynamic_cast<MemoryItem*>(layout()->itemAt(fromPos(x,y)));
-
-    if(!p_mem)
-    {
-        qDebug() << "not MemoryItem";
-        return;
-    }
-
-    MemoryScene* p_memScene = dynamic_cast<MemoryScene*>(scene());
-    if(!p_memScene)
-    {
-        qDebug() << "p_memScene is null (changeColor)";
-    }
-    else
-    {
-        MemoryUnit* p_memUnit;
-        if((p_memUnit=p_memScene->newUnit(2)))
-        {
-            p_mem->setParentItem(p_memUnit);
-            p_memUnit->setUnitSelected(true);
-        }
-    }
-
-//    if(parent_item)
-//    {
-//        parent_item->setFlag(QGraphicsItem::ItemHasNoContents);
-//        p_mem->setParentItem(parent_item);
-//    }
-
-//    qDebug()<<p_mem->geometry();
-//    groupReg+=p_mem->geometry().toRect();
-
-    p_mem->setColor(newColor);
-}
-
-void MemoryWidget::changeColor(int pos,const QColor &newColor)
-{
-    changeColor(toRow(pos),toColumn(pos),newColor);
-}
-
-void MemoryWidget::changeColors(int fromPos, int toPos, const QColor &newColor)
-{
-    for(int i=fromPos;i<toPos;++i)
-        changeColor(i,newColor);
-}
-
-void MemoryWidget::changeColors(int fromRow, int fromCol, int toRow, int toCol, const QColor &newColor)
-{
-    changeColors(fromPos(fromRow,fromCol),fromPos(toRow,toCol),newColor);
-}
-
-void MemoryWidget::changeColors(const MemoryRecordsList &records)
-{
-    foreach(const MemoryRecord& record, records)
-    {
-        changeColor(record.x,record.y,record.color);
-    }
-}
 
 int MemoryWidget::toColumn(int index) const
 {
@@ -148,16 +64,11 @@ int MemoryWidget::toMemoryAdress(int pos) const
 
 void MemoryWidget::setupMatrix(QList<MemoryItem*> mem_items)
 {
-
-
-//    QGraphicsGridLayout * topLayout = new QGraphicsGridLayout;
     QGraphicsGridLayout * gridLayout = new QGraphicsGridLayout;
 
     gridLayout->setContentsMargins(0, 0, 0, 0);
     gridLayout->setSpacing(m_spacing);
 
-
-//    QSizePolicy sizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
     if(labels())
     {
         LabelItem* emptyLabelItem = new LabelItem(this);
@@ -180,24 +91,20 @@ void MemoryWidget::setupMatrix(QList<MemoryItem*> mem_items)
         }
         gridLayout->addItem(mem_items[i], toRow(i), toColumn(i));
     }
-    QGraphicsProxyWidget *pWidget = new QGraphicsProxyWidget(this);
+    {
+        // MemoryStatus
+        m_memoryStatus = new MemoryStatus(this);
+        m_memoryStatus->setStatusLabel(tr("Info:"));
+        m_memoryStatus->setItemInfo(tr("Item Info"));
+        m_memoryStatus->setUnitInfo(tr("Unit Info"));
 
-    pWidget->setWidget(m_statusBar);
+        gridLayout->addItem(m_memoryStatus,toRow(mem_items.size()-1)+1,0,1,itemPerRow()+(labels()?1:0));
 
-    gridLayout->addItem(pWidget,toRow(mem_items.size()-1)+1,0,1,itemPerRow()+(labels()?1:0));
-//    gridLayout->setRowStretchFactor(toRow(colors.size()-1)+1,1);
-
+    }
 
     setLayout(gridLayout);
 
     adjustSize();
-
-    changeColors(210,500,Qt::yellow);//REMOVABLE
-
-//    gridLayout->setSizePolicy(sizePolicy);
-//    qDebug()<<rect();
-
-
 }
 
 QGraphicsLayout *MemoryWidget::layout()
@@ -213,6 +120,36 @@ qreal MemoryWidget::spacing() const
 void MemoryWidget::setSpacing(const qreal &spacing)
 {
     m_spacing = spacing;
+}
+
+void MemoryWidget::setStatusLabel(const QString &text)
+{
+    m_memoryStatus->setStatusLabel(text);
+}
+
+QString MemoryWidget::statusLabel() const
+{
+    return m_memoryStatus->statusLabel();
+}
+
+void MemoryWidget::setItemInfo(const QString &text)
+{
+    m_memoryStatus->setItemInfo(text);
+}
+
+QString MemoryWidget::itemInfo() const
+{
+    return m_memoryStatus->itemInfo();
+}
+
+void MemoryWidget::setUnitInfo(const QString &text)
+{
+    m_memoryStatus->setUnitInfo(text);
+}
+
+QString MemoryWidget::unitInfo() const
+{
+    return m_memoryStatus->unitInfo();
 }
 bool MemoryWidget::labels() const
 {
@@ -232,6 +169,11 @@ void MemoryWidget::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
     // empty
 }
 
+void MemoryWidget::memoryStatusUpdate(const QRectF &rect)
+{
+    m_memoryStatus->update(rect);
+}
+
 int MemoryWidget::itemPerRow() const
 {
     return m_itemPerRow;
@@ -240,4 +182,5 @@ int MemoryWidget::itemPerRow() const
 void MemoryWidget::setItemPerRow(int itemPerRow)
 {
     m_itemPerRow = itemPerRow;
+
 }

@@ -19,9 +19,9 @@ SOURCES += main.cpp\
     memoryscene.cpp \
     appeventfilter.cpp \
     labelitem.cpp \
-    memoryitemgroup.cpp \
     memoryitempresentation.cpp \
-    memoryunit.cpp
+    memoryunit.cpp \
+    memorystatus.cpp
 
 HEADERS  += \
     globalvalues.hpp \
@@ -30,10 +30,10 @@ HEADERS  += \
     memoryscene.hpp \
     memoryview.hpp \
     memorywidget.hpp \
-    memoryitemgroup.hpp \
     memoryitem.hpp \
     appeventfilter.hpp \
-    memoryunit.hpp
+    memoryunit.hpp \
+    memorystatus.hpp
 
 FORMS    += \
     form.ui

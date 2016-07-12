@@ -7,26 +7,36 @@
 
 namespace Memory
 {
-    enum MemoryStatus
+    enum MemoryState
     {
         Empty,
-        Active
+        Busy,
+        Read,
+        Free,
+        StateCount
     };
 }
 using namespace Memory;
 
-QString MemoryStatus_to_Qstring(MemoryStatus status);
+QString MemoryState_to_Qstring(MemoryState state);
+QColor MemoryState_to_QColor(MemoryState state);
 
-QString operator+(const QString& qstr, MemoryStatus status);
+QString operator+(const QString& qstr, MemoryState status);
 
 
 struct MemoryItemPresentation
 {
-    MemoryItemPresentation(MemoryStatus status = Empty, int unitId = 0);
-    MemoryItemPresentation(int unitId = 0, MemoryStatus status = Empty);
+    MemoryItemPresentation(MemoryState status = Empty, int unitId = 0);
 
-    MemoryStatus m_status;
+    MemoryState m_state;
+
+    // extra info here
     int m_unitId;
+
+    //
+
+    long m_start,
+         m_finish;
 
     QColor color() const;
 };
