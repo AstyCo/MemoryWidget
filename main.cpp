@@ -17,6 +17,7 @@
 #include <QGraphicsItemGroup>
 extern QGraphicsItemGroup* it_group;
 
+MemoryScene* mem_scene;
 
 int main(int argc, char *argv[])
 {
@@ -25,6 +26,7 @@ int main(int argc, char *argv[])
 //    a.installEventFilter(new AppEventFilter);
 
     MemoryScene scene;
+    mem_scene = &scene;
 
     scene.setBackgroundBrush(QBrush(Qt::gray));
 //    scene.addItem(it_group);

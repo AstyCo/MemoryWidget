@@ -1,12 +1,13 @@
 #ifndef MEMORYUNIT_HPP
 #define MEMORYUNIT_HPP
 
-#include "memoryitem.hpp"
 #include "memoryitempresentation.hpp"
 
 #include <QGraphicsItem>
 #include <QVariant>
 #include <QPen>
+
+class MemoryItem;
 
 class MemoryUnit : public QGraphicsItem
 {

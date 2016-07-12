@@ -29,6 +29,8 @@ MemoryScene::MemoryScene( QObject * parent)
 
     init(records);
 
+
+
 }
 
 MemoryScene::~MemoryScene()

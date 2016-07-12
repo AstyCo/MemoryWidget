@@ -7,6 +7,7 @@
 
 #include <QPainterPath>
 
+class MemoryUnit;
 
 class MemoryItem : public QGraphicsLayoutItem, public QGraphicsItem
 {
@@ -40,6 +41,8 @@ private:
     QColor m_color;
 
     long m_index;
+
+    MemoryUnit* m_parentUnit;
 
 };
 

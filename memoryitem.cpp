@@ -10,6 +10,8 @@
 #include <QDebug>
 
 
+extern MemoryScene* mem_scene;
+
 MemoryItem::MemoryItem(long index,QGraphicsItem *parent/* = 0*/)
     : QGraphicsLayoutItem(), QGraphicsItem(parent)
 {
@@ -65,21 +67,25 @@ void MemoryItem::paint(QPainter *painter,
 
 void MemoryItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
 {
-    MemoryScene * mem_scene = dynamic_cast<MemoryScene*>(scene());
+    static int k = 0;
     if(!mem_scene)
-    {
-        qDebug() << "not MemoryScene";
         return;
-    }
+    qDebug() << QString::number(k++)+" : hoverEnterEvent :: item";
+//    MemoryScene * mem_scene = dynamic_cast<MemoryScene*>(scene());
+//    if(!mem_scene)
+//    {
+//        qDebug() << "not MemoryScene";
+//        return;
+//    }
 
-    MemoryUnit* par_unit = dynamic_cast<MemoryUnit*>(parentItem());
-    if(!par_unit)
-    {
-//        qDebug()<<"MemoryItem::hoverEnterEvent MemoryItem has no parent of MemoryUnit";
-        return;
-    }
+//    MemoryUnit* par_unit = dynamic_cast<MemoryUnit*>(parentItem());
+//    if(!par_unit)
+//    {
+////        qDebug()<<"MemoryItem::hoverEnterEvent MemoryItem has no parent of MemoryUnit";
+//        return;
+//    }
 
-    mem_scene->setItemInfo(QString::number(m_index)+" : "+par_unit->status());
+    mem_scene->setItemInfo(QString::number(k)/*+" : "+par_unit->status()*/);
 }
 
 void MemoryItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
