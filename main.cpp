@@ -1,8 +1,11 @@
-#include "memorywidget.h"
-#include "memoryview.h"
-#include "memoryscene.h"
+#include "memorywidget.hpp"
+#include "memoryview.hpp"
+#include "memoryscene.hpp"
+#include "memoryitempresentation.hpp"
 
-#include "appeventfilter.h"
+#include "globalvalues.hpp"
+
+#include "appeventfilter.hpp"
 
 #include <QApplication>
 
@@ -21,21 +24,18 @@ int main(int argc, char *argv[])
 
 //    a.installEventFilter(new AppEventFilter);
 
-    MemoryWidget *memoryWidget = new MemoryWidget;
     MemoryScene scene;
 
     scene.setBackgroundBrush(QBrush(Qt::gray));
-    scene.addItem(memoryWidget);
-    scene.addItem(it_group);
-    qDebug()<< scene.items().size();
+//    scene.addItem(it_group);
+//    qDebug()<< scene.items().size();
 
     MemoryView view(&scene);
     view.setMaximumSize(1920,1680);
     view.move(0,0);
 
-    memoryWidget->adjustSize();
     view.adjustSize();
-    qDebug()<<view.size();
+//    qDebug()<<view.size();
     view.setFrameStyle(0);
     view.setAlignment(Qt::AlignLeft | Qt::AlignTop);
     view.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);

@@ -1,5 +1,5 @@
-#ifndef MEMORYVIEW_H
-#define MEMORYVIEW_H
+#ifndef MEMORYVIEW_HPP
+#define MEMORYVIEW_HPP
 
 #include <QGraphicsView>
 #include <QtCore>
@@ -19,4 +19,4 @@ private:
 
 };
 
-#endif // MEMORYVIEW_H
+#endif // MEMORYVIEW_HPP

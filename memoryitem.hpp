@@ -1,5 +1,5 @@
-#ifndef MEMORYITEM_H
-#define MEMORYITEM_H
+#ifndef MEMORYITEM_HPP
+#define MEMORYITEM_HPP
 
 #include <QGraphicsLayoutItem>
 #include <QGraphicsItem>
@@ -11,7 +11,7 @@
 class MemoryItem : public QGraphicsLayoutItem, public QGraphicsItem
 {
 public:
-    MemoryItem(QGraphicsItem *parent = 0);
+    MemoryItem(long index,QGraphicsItem *parent = 0);
     virtual ~MemoryItem();
 
     // Inherited from QGraphicsLayoutItem
@@ -20,18 +20,16 @@ public:
 
     // Inherited from QGraphicsItem
     QRectF boundingRect() const;
-//    QPainterPath shape() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
         QWidget *widget = 0);
 
-    virtual QPainterPath opaqueArea() const;
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
 
-
-//    void setToolTip(const QString &toolTip);
-//    QString toolTip() const;
 
     QColor color() const;
-
+    long index() const;
+    void setIndex(long index);
 
 public slots:
     void setColor(const QColor& newColor);
@@ -41,6 +39,8 @@ private:
     qreal m_borderWidth;
     QColor m_color;
 
+    long m_index;
+
 };
 
-#endif // MEMORYITEM_H
+#endif // MEMORYITEM_HPP

@@ -1,4 +1,5 @@
-#include "memoryview.h"
+#include "memoryview.hpp"
+#include "memoryscene.hpp"
 
 #include <QDebug>
 #include <QResizeEvent>

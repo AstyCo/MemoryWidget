@@ -1,4 +1,5 @@
-#include "memoryitem.h"
+#include "memoryitem.hpp"
+#include "memoryscene.hpp"
 #include "globalvalues.hpp"
 
 
@@ -9,7 +10,7 @@
 #include <QDebug>
 
 
-MemoryItem::MemoryItem(QGraphicsItem *parent/* = 0*/)
+MemoryItem::MemoryItem(long index,QGraphicsItem *parent/* = 0*/)
     : QGraphicsLayoutItem(), QGraphicsItem(parent)
 {
     setGraphicsItem(this);
@@ -18,6 +19,8 @@ MemoryItem::MemoryItem(QGraphicsItem *parent/* = 0*/)
 
     setFlags(ItemIsSelectable);
     setAcceptsHoverEvents(true);
+
+    setIndex(index);
 }
 
 MemoryItem::~MemoryItem()
@@ -60,12 +63,36 @@ void MemoryItem::paint(QPainter *painter,
 
 }
 
-QPainterPath MemoryItem::opaqueArea() const
+void MemoryItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
 {
-    QPainterPath path;
-    path.addRect(boundingRect());
-    return path;
+    MemoryScene * mem_scene = dynamic_cast<MemoryScene*>(scene());
+    if(!mem_scene)
+    {
+        qDebug() << "not MemoryScene";
+        return;
+    }
+
+    MemoryUnit* par_unit = dynamic_cast<MemoryUnit*>(parentItem());
+    if(!par_unit)
+    {
+//        qDebug()<<"MemoryItem::hoverEnterEvent MemoryItem has no parent of MemoryUnit";
+        return;
+    }
+
+    mem_scene->setItemInfo(QString::number(m_index)+" : "+par_unit->status());
 }
+
+void MemoryItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
+{
+
+}
+
+//QPainterPath MemoryItem::opaqueArea() const
+//{
+//    QPainterPath path;
+//    path.addRect(boundingRect());
+//    return path;
+//}
 
 //void MemoryItem::setToolTip(const QString &toolTip)
 //{
@@ -83,6 +110,16 @@ void MemoryItem::setColor(const QColor &newColor)
     {
         m_color = newColor;
     }
+}
+
+long MemoryItem::index() const
+{
+    return m_index;
+}
+
+void MemoryItem::setIndex(long index)
+{
+    m_index = index;
 }
 
 QColor MemoryItem::color() const

@@ -1,8 +1,11 @@
-#ifndef MEMORYITEMGROUP_H
-#define MEMORYITEMGROUP_H
+#ifndef MEMORYITEMGROUP_HPP
+#define MEMORYITEMGROUP_HPP
 
 
 #include <QGraphicsItemGroup>
+#include <QColor>
+
+#include <QPainterPath>
 
 class MemoryItemGroup : public QGraphicsItemGroup
 {
@@ -15,9 +18,15 @@ public:
 
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
+    QColor groupColor() const;
+    void setGroupColor(const QColor &groupColor);
+
+    QPainterPath shape() const;
+
 private:
 
     int m_groupId;
+    QColor m_groupColor;
 };
 
-#endif // MEMORYITEMGROUP_H
+#endif // MEMORYITEMGROUP_HPP

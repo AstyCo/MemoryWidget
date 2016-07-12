@@ -1,5 +1,8 @@
-#ifndef MEMORYWIDGET_H
-#define MEMORYWIDGET_H
+#ifndef MEMORYWIDGET_HPP
+#define MEMORYWIDGET_HPP
+
+//#include "memoryitempresentation.hpp"
+#include "memoryitem.hpp"
 
 #include <QGraphicsWidget>
 
@@ -38,9 +41,13 @@ public:
     void changeColors(int fromPos, int toPos,   const QColor& newColor);
     void changeColors(int fromRow, int fromCol,
                       int toRow, int toCol,     const QColor& newColor);
+    void setupMatrix(QList<MemoryItem*> records);
 
     bool labels() const;
     void setLabels(bool labels);
+
+    qreal spacing() const;
+    void setSpacing(const qreal &spacing);
 
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
@@ -52,7 +59,6 @@ private:
     int toMemoryAdress(int row,int column) const;
     int toMemoryAdress(int pos) const;
 
-    void setupMatrix(MemoryColorsList records);
 private:
 
     QGraphicsLayout *layout();
@@ -63,8 +69,6 @@ private:
 public:
     QStatusBar* m_statusBar;
     QLabel * m_info1, *m_info2;
-
-
 };
 
-#endif // MEMORYWIDGET_H
+#endif // MEMORYWIDGET_HPP

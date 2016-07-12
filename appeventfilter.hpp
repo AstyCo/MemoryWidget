@@ -1,5 +1,5 @@
-#ifndef APPEVENTFILTER_H
-#define APPEVENTFILTER_H
+#ifndef APPEVENTFILTER_HPP
+#define APPEVENTFILTER_HPP
 
 #include <QObject>
 
@@ -14,5 +14,5 @@ signals:
 public slots:
 };
 
-#endif // APPEVENTFILTER_H
+#endif // APPEVENTFILTER_HPP
 

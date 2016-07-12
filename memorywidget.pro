@@ -19,16 +19,21 @@ SOURCES += main.cpp\
     memoryscene.cpp \
     appeventfilter.cpp \
     labelitem.cpp \
-    memoryitemgroup.cpp
+    memoryitemgroup.cpp \
+    memoryitempresentation.cpp \
+    memoryunit.cpp
 
-HEADERS  += memorywidget.h \
-    memoryview.h \
-    memoryitem.h \
-    memoryscene.h \
-    appeventfilter.h \
+HEADERS  += \
     globalvalues.hpp \
     labelitem.hpp \
-    memoryitemgroup.h
+    memoryitempresentation.hpp \
+    memoryscene.hpp \
+    memoryview.hpp \
+    memorywidget.hpp \
+    memoryitemgroup.hpp \
+    memoryitem.hpp \
+    appeventfilter.hpp \
+    memoryunit.hpp
 
 FORMS    += \
     form.ui
