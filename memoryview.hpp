@@ -12,6 +12,7 @@ public:
     MemoryView(QGraphicsScene * scene, QWidget * parent = 0);
 
     void resizeEvent(QResizeEvent *);
+
 private:
 
     qreal m_viewRatio;

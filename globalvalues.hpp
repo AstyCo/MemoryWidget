@@ -2,7 +2,12 @@
 #define GLOBALVALUES_HPP
 
 
-#define DEFAULT_SPACING (qreal(5))
+#define DEFAULT_MINIMUMEDGE (qreal(10))
+
+#define DEFAULT_STATUS_HEIGHT (qreal(20))
+#define DEFAULT_STATUS_FONTPIXELSIZE (qreal(12))
+
+#define DEFAULT_SPACING (qreal(0))
 #define DEFAULT_EDGELENGTH  (qreal(10))
 #define DEFAULT_LABELCOLOR  (Qt::white)
 #define DEFAULT_LABEL  (QString())

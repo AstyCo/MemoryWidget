@@ -14,6 +14,8 @@
 
 QT_FORWARD_DECLARE_CLASS(QStatusBar);
 
+class MemoryInteractiveUnit;
+
 
 class MemoryScene : public QGraphicsScene
 {
@@ -48,6 +50,14 @@ public:
 
     void viewResized(QSizeF viewSize);
 
+    void showInteractiveRange(long start, long finish);
+    void hideInteractiveRange();
+
+    void updateParenthesis();
+
+public slots:
+    void transformChanged(const QTransform& transform);
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
@@ -62,10 +72,11 @@ private:
     int  itemIndex(QGraphicsItem* item) const;
     void memoryStatusUpdate(const QRectF& rect = QRectF());
 
-
+public:
     int m_lastSelectedIndex;
     MemoryItem* m_lastSelected;
     MemoryWidget* m_memoryWidget;
+    MemoryInteractiveUnit* m_interactiveUnit;
 
     QList<MemoryUnit*> m_units;
     QList<MemoryItem*> m_items;
@@ -77,7 +88,7 @@ private:
 
     long m_memorySize;
 
-
+    friend class MemoryInteractiveUnit;
 };
 
 #endif // MEMORYSCENE_HPP

@@ -5,7 +5,7 @@
 #include <QGraphicsLayoutItem>
 
 #include <QString>
-
+#include <QFont>
 
 
 
@@ -33,6 +33,15 @@ public:
     QString unitInfo() const;
     void setUnitInfo(const QString &unitInfo);
 
+//    QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+    void transformChanged(const QTransform& transform);
+
+    qreal height() const;
+    void setHeight(const qreal &height);
+
+    QFont font() const;
+    void setFont(const QFont &font);
+
 private:
     QString m_statusLabel;
     QString m_itemInfo;
@@ -41,6 +50,12 @@ private:
     QRect   m_statusLabelRect,
             m_itemInfoRect,
             m_unitInfoRect;
+
+    qreal m_lastLod;
+
+    qreal m_height;
+    QFont m_font;
+
 };
 
 #endif // MEMORYSTATUS_HPP

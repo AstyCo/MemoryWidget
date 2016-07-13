@@ -1,5 +1,7 @@
 #include "memoryscene.hpp"
 
+#include "memoryinteractiveunit.hpp"
+
 #include <QGraphicsSceneMouseEvent>
 
 #include <QApplication>
@@ -14,11 +16,17 @@ MemoryScene::MemoryScene( QObject * parent)
     setItemEdge(DEFAULT_EDGELENGTH);
     setItemBorder(DEFAULT_BORDERWIDTH);
 
+    m_items.clear();
+    m_units.clear();
+    m_lastSelected=NULL;
 
     m_memoryWidget = new MemoryWidget;
 
+    m_memoryWidget->setLabels(true);
+
     addItem(m_memoryWidget);
-//    m_memoryWidget->setSpacing(5);
+
+    m_memoryWidget->setSpacing(0);
     m_memoryWidget->setItemPerRow(64);
 
     QList<MemoryItemPresentation> records;
@@ -45,13 +53,13 @@ MemoryScene::MemoryScene( QObject * parent)
         vacantPos+=1;
 
         newPeace.m_state=static_cast<MemoryState>(qrand()%Memory::StateCount);
-        if(newPeace.m_state==Memory::Empty)
+        if(newPeace.m_state==Memory::Freed)
             newPeace.m_unitId=0;
         else
+        {
             newPeace.m_unitId=id++;
-
-
-        records.push_back(newPeace);
+            records.push_back(newPeace);
+        }
     }
 
 
@@ -67,7 +75,7 @@ void MemoryScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
     QList<QGraphicsItem*> itemsAtPos = items(event->scenePos());
 
 
-    MemoryItem* p_mem ;
+    MemoryItem* p_mem = NULL;
 
     foreach(QGraphicsItem* itemAtPos,itemsAtPos)
     {
@@ -78,6 +86,7 @@ void MemoryScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
     {
         return;
     }
+
     setLastSelected(p_mem);
     return QGraphicsScene::mousePressEvent(event);
 
@@ -89,10 +98,9 @@ void MemoryScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 //       && (QApplication::keyboardModifiers()&Qt::ShiftModifier)
             )
     {
-        clearSelection();
 
         QList<QGraphicsItem*> itemsAtPos = items(event->scenePos());
-        MemoryItem * p_mem;
+        MemoryItem * p_mem = NULL;
 
         foreach(QGraphicsItem* itemAtPos,itemsAtPos)
         {
@@ -103,6 +111,7 @@ void MemoryScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         if(!p_mem)
             return;
 
+        clearSelection();
 
         int newSelectedIndex = p_mem->index();
 
@@ -146,13 +155,13 @@ void MemoryScene::keyReleaseEvent(QKeyEvent *event)
 
 void MemoryScene::init(const QList<MemoryItemPresentation> &mem_it_list,long memSize)
 {
-    MemoryUnit * p_memUnit;
+    MemoryUnit * p_memUnit = NULL;
 
     setMemorySize(memSize);
 
     for(int i = 0; i<memorySize(); ++i)
     {
-        m_items.append(new MemoryItem(i,itemEdge(),itemBorder()));
+        m_items.append(new MemoryItem(i,itemEdge(),itemBorder(),m_memoryWidget));
         m_itemsParents.append(NULL);
     }
 
@@ -162,29 +171,23 @@ void MemoryScene::init(const QList<MemoryItemPresentation> &mem_it_list,long mem
         p_memUnit = new MemoryUnit(m_memoryWidget);
         p_memUnit->setState(mem_it_list[i].m_state);
         p_memUnit->setUnitId(mem_it_list[i].m_unitId);
-        p_memUnit->setStart(mem_it_list[i].m_start);
-        p_memUnit->setFinish(mem_it_list[i].m_finish);
+        p_memUnit->addItems(mem_it_list[i].m_start,mem_it_list[i].m_finish,m_items);
 
         m_unit_by_unitId.insert(mem_it_list[i].m_unitId,p_memUnit);
         m_units.append(p_memUnit);
-
-        for(int j = 0; j<p_memUnit->size(); ++j)
-        {
-            m_itemsParents[p_memUnit->start()+j] = p_memUnit;
-        }
     }
 
     m_memoryWidget->setupMatrix(m_items);
 
-    for(int i=0;i<m_items.size();++i)
-    {
-        m_items[i]->setParentItem(m_itemsParents[i]);
-    }
+    updateParenthesis();
+
+    m_interactiveUnit = new MemoryInteractiveUnit(this,m_memoryWidget);
+
 }
 
 MemoryUnit* MemoryScene::newUnit(int unitId)
 {
-    MemoryUnit* p_memUnit;
+    MemoryUnit* p_memUnit = NULL;
     if(unitId == -1)
     {
         int vacantUnitId = 0;
@@ -199,7 +202,7 @@ MemoryUnit* MemoryScene::newUnit(int unitId)
         return m_unit_by_unitId[unitId];
 
     p_memUnit = new MemoryUnit(m_memoryWidget);
-    p_memUnit->setState(Memory::Empty);
+    p_memUnit->setState(Memory::Freed);
     p_memUnit->setUnitId(unitId);
     m_unit_by_unitId.insert(unitId,p_memUnit);
     m_units.append(p_memUnit);
@@ -236,7 +239,13 @@ int MemoryScene::itemPerRow() const
 
 void MemoryScene::setItemPerRow(int newItemPerRow)
 {
+    if(newItemPerRow==itemPerRow())
+        return;
+
     m_memoryWidget->setItemPerRow(newItemPerRow);
+    m_memoryWidget->setupMatrix(m_items);
+    updateParenthesis();
+
 }
 
 qreal MemoryScene::itemEdge() const
@@ -262,7 +271,14 @@ void MemoryScene::clearLastSelected()
 void MemoryScene::setLastSelected(MemoryItem *p_mem)
 {
     m_lastSelected = p_mem;
-    m_lastSelectedIndex = p_mem->index();
+    if(!p_mem)
+    {
+        m_lastSelectedIndex = -1;
+    }
+    else
+    {
+        m_lastSelectedIndex = p_mem->index();
+    }
 }
 
 int MemoryScene::itemIndex(QGraphicsItem *item) const
@@ -273,6 +289,11 @@ int MemoryScene::itemIndex(QGraphicsItem *item) const
 void MemoryScene::memoryStatusUpdate(const QRectF &rect)
 {
     m_memoryWidget->memoryStatusUpdate(rect);
+}
+
+void MemoryScene::transformChanged(const QTransform &transform)
+{
+    m_memoryWidget->transformChanged(transform);
 }
 long MemoryScene::memorySize() const
 {
@@ -288,16 +309,36 @@ void MemoryScene::viewResized(QSizeF viewSize)
 {
     qreal viewWidth = viewSize.width();
 
-    qDebug() << spacing();
-    qDebug() << itemEdge();
-    qDebug() << itemBorder();
-
-
     int newItemPerRow = (viewWidth-spacing())
-                              /(spacing()+itemEdge()+2*itemBorder());
+                              /(spacing()+itemEdge()+2*itemBorder())
+                        - ((m_memoryWidget->labels())?1:0);
 
-    qDebug() << QString::number(newItemPerRow);
-    qDebug() << viewSize;
+
+
+
+    if(itemPerRow()!=newItemPerRow)
+        setItemPerRow(newItemPerRow);
+
+    setSceneRect(m_memoryWidget->geometry());
+
+}
+
+void MemoryScene::showInteractiveRange(long start, long finish)
+{
+    m_interactiveUnit->setRange(start,finish);
+}
+
+void MemoryScene::hideInteractiveRange()
+{
+    m_interactiveUnit->setEnable(false);
+}
+
+void MemoryScene::updateParenthesis()
+{
+    for(int i=0;i<m_units.size();++i)
+    {
+        m_units[i]->updateParenthesis();
+    }
 }
 
 qreal MemoryScene::itemBorder() const

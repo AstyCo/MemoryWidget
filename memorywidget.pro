@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     labelitem.cpp \
     memoryitempresentation.cpp \
     memoryunit.cpp \
-    memorystatus.cpp
+    memorystatus.cpp \
+    memoryinteractiveunit.cpp
 
 HEADERS  += \
     globalvalues.hpp \
@@ -33,7 +34,8 @@ HEADERS  += \
     memoryitem.hpp \
     appeventfilter.hpp \
     memoryunit.hpp \
-    memorystatus.hpp
+    memorystatus.hpp \
+    memoryinteractiveunit.hpp
 
 FORMS    += \
     form.ui

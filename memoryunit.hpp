@@ -32,6 +32,7 @@ public:
     void setFinish(long finish);
 
     long size() const;
+    void setSize(long newSize);
 
     qreal spacing() const;
 
@@ -44,9 +45,14 @@ public:
 
     QColor color() const;
 
+    void addItems(long start, long finish, const QList<MemoryItem*>& items);
+    void removeTheFirst(long until);
+    void removeTheLast(long until);
+    void updateParenthesis();
+
 
 private:
-    void rebuildPath();
+    void rebuildShape();
 
     QPainterPath shapeBorder() const;
     void setShapeBorder(const QPainterPath &shapeBorder);

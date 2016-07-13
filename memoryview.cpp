@@ -24,14 +24,27 @@ MemoryView::MemoryView(QGraphicsScene * scene, QWidget * parent)
         m_viewRatio = width/height;
     }
     else m_viewRatio = 1.0;
+
+    setRenderHint(QPainter::Antialiasing,true);
+
 }
 
 void MemoryView::resizeEvent(QResizeEvent *event)
 {
-    QSizeF newSize = event->size();
-    m_memoryScene->viewResized(newSize);
+    qDebug() << m_viewRatio;
 
 //    fitInView(scene()->sceneRect(),Qt::KeepAspectRatio);
-    QGraphicsView::resizeEvent(event);
+
+    QTransform m = transform();
+
+    QSizeF newSize = event->size();
+    m_memoryScene->viewResized(newSize);
+    m_memoryScene->transformChanged(transform());
+
+    qDebug()<< newSize;
+    qDebug()<< sceneRect();
+    qDebug()<<m_memoryScene->m_memoryWidget->boundingRect();
+
+    return QGraphicsView::resizeEvent(event);
 }
 

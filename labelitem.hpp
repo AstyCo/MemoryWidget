@@ -13,12 +13,11 @@
 class LabelItem : public QGraphicsLayoutItem, public QGraphicsItem
 {
 public:
-    LabelItem(QGraphicsItem *parent = 0);
     LabelItem(  const QString& label = DEFAULT_LABEL,
-                int edgeLength = DEFAULT_EDGELENGTH,
-                QColor color = DEFAULT_LABELCOLOR,
+                QGraphicsItem *parent = 0,
+                qreal edgeLength = DEFAULT_EDGELENGTH,
                 qreal borderWidth = DEFAULT_BORDERWIDTH,
-                QGraphicsItem *parent = 0);
+                const QColor& color = DEFAULT_LABELCOLOR);
     virtual ~LabelItem();
 
     // Inherited from QGraphicsLayoutItem
@@ -37,6 +36,12 @@ public:
 
     QColor getColor() const;
     void setColor(const QColor &color);
+
+    int getEdgeLength() const;
+    void setEdgeLength(int edgeLength);
+
+    qreal getBorderWidth() const;
+    void setBorderWidth(const qreal &borderWidth);
 
 public slots:
 

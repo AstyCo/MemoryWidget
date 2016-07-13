@@ -9,23 +9,23 @@
 
 #include <QDebug>
 
-
-extern MemoryScene* mem_scene;
-
 MemoryItem::MemoryItem(long index,qreal edgeLength,qreal borderWidth,QGraphicsItem *parent/* = 0*/)
     : QGraphicsLayoutItem(), QGraphicsItem(parent)
 {
     setGraphicsItem(this);
+    setIndex(index);
 
     m_parentUnit = dynamic_cast<MemoryUnit*>(parent);
         // NULL if not MemoryUnit*
-    m_edgeLength = edgeLength;
-    m_borderWidth = borderWidth;
+    setEdgeLength(edgeLength);
+    setBorderWidth(borderWidth);
 
     setFlags(ItemIsSelectable);
     setAcceptsHoverEvents(true);
 
-    setIndex(index);
+    enableToolTip();
+
+
 }
 
 MemoryItem::~MemoryItem()
@@ -69,26 +69,59 @@ void MemoryItem::paint(QPainter *painter,
 
 void MemoryItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
 {
-    if(!mem_scene)
-        return;
+    MemoryScene* p_scene = dynamic_cast<MemoryScene*>(scene());
+    if(!p_scene)
+        return QGraphicsItem::hoverEnterEvent(event);
 
-    if(parentUnitId())
-        setParentUnitSelected(true);
+//    if(parentUnitId())
+//        setParentUnitSelected(true);
 
-    mem_scene->setItemInfo(QString::number(index()));
-    mem_scene->setUnitInfo(QString(QObject::tr("Unit Group Id: ")+
-                                   QString::number(parentUnitId())
-                                   +QString(QObject::tr("  Unit State: "))
-                                   +state()));
+    p_scene->setItemInfo(QString::number(index()));
+//    p_scene->setUnitInfo(QString(   QObject::tr("Unit Group Id: ")
+//                                    +QString::number(parentUnitId())
+//                                    +QString(QObject::tr("  Unit State: "))
+//                                    +state()
+//                                    +QObject::tr(" Unit Memory: ")
+//                                    +"0x"+fixedNumPresentation(parentUnitStart(),16,2047)
+//                                    +" - 0x"+fixedNumPresentation(parentUnitFinish(),16,2047)
+//                         ));
+    p_scene->showInteractiveRange(index(),index()+100);
 
     return QGraphicsItem::hoverEnterEvent(event);
 }
 
 void MemoryItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
 {
-    setParentUnitSelected(false);
+//    setParentUnitSelected(false);
+    MemoryScene* p_scene = dynamic_cast<MemoryScene*>(scene());
+    if(!p_scene)
+        return QGraphicsItem::hoverLeaveEvent(event);
 
+    p_scene->hideInteractiveRange();
+    p_scene->update();
     return QGraphicsItem::hoverLeaveEvent(event);
+}
+
+QString MemoryItem::toolTip() const
+{
+    return QGraphicsItem::toolTip();
+}
+
+void MemoryItem::setToolTip(const QString &toolTip)
+{
+    return QGraphicsItem::setToolTip(toolTip);
+}
+
+void MemoryItem::enableToolTip()
+{
+    setToolTip(QString("Dec: ")+fixedNumPresentation(index(),10,2047)+'\n'
+               +QString("Hex: 0x")+fixedNumPresentation(index(),16,2047)+'\n'
+               +QString("Bin:  ")+fixedNumPresentation(index(),2,2047));
+}
+
+void MemoryItem::disableToolTip()
+{
+    setToolTip(QString());
 }
 
 QVariant MemoryItem::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value)
@@ -133,7 +166,7 @@ MemoryState MemoryItem::state() const
         return m_parentUnit->state();
     }
 
-    return Memory::Empty;
+    return Memory::Freed;
 }
 
 QColor MemoryItem::color() const
@@ -143,43 +176,33 @@ QColor MemoryItem::color() const
         return m_parentUnit->color();
     }
 
-    return MemoryState_to_QColor(Memory::Empty);
+    return MemoryState_to_QColor(Memory::Freed);
 }
 
-int MemoryItem::parentUnitId() const
-{
-    if(m_parentUnit)
-    {
-        return m_parentUnit->unitId();
-    }
-
-    return 0;
-}
-
-//QPainterPath MemoryItem::opaqueArea() const
+//int MemoryItem::parentUnitId() const
 //{
-//    QPainterPath path;
-//    path.addRect(boundingRect());
-//    return path;
-//}
-
-//void MemoryItem::setToolTip(const QString &toolTip)
-//{
-//    return QGraphicsItem::setToolTip(toolTip);
-//}
-
-//QString MemoryItem::toolTip() const
-//{
-//    return QGraphicsItem::toolTip();
-//}
-
-//void MemoryItem::setColor(const QColor &newColor)
-//{
-//    if(newColor!=m_color)
+//    if(m_parentUnit)
 //    {
-//        m_color = newColor;
+//        return m_parentUnit->unitId();
 //    }
+
+//    return 0;
 //}
+
+//long MemoryItem::parentUnitStart() const
+//{
+//    if(!m_parentUnit)
+//        return -1;
+//    return m_parentUnit->start();
+//}
+
+//long MemoryItem::parentUnitFinish() const
+//{
+//    if(!m_parentUnit)
+//        return -1;
+//    return m_parentUnit->finish();
+//}
+
 
 long MemoryItem::index() const
 {

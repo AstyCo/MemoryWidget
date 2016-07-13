@@ -5,6 +5,7 @@
 #include <QPainter>
 
 #include <QFontMetrics>
+#include <QStyleOptionGraphicsItem>
 
 #include <QDebug>
 
@@ -14,7 +15,10 @@ MemoryStatus::MemoryStatus(QGraphicsItem* parent)
     : QGraphicsItem(parent), QGraphicsLayoutItem()
 {
     setGraphicsItem(this);
+    m_lastLod = 0;
 
+    setHeight(DEFAULT_STATUS_HEIGHT);
+    setFlag(QGraphicsItem::ItemSendsGeometryChanges,true);
 }
 
 MemoryStatus::~MemoryStatus()
@@ -46,18 +50,19 @@ QSizeF MemoryStatus::sizeHint(Qt::SizeHint which, const QSizeF &constraint) cons
 
 QRectF MemoryStatus::boundingRect() const
 {
-    return QRectF( 0, 0, parentItem()->boundingRect().width(), 20);
+    return QRectF( 0, 0, parentItem()->boundingRect().width(), height());
 }
 
 void MemoryStatus::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-    Q_UNUSED(option);
     Q_UNUSED(widget);
+    Q_UNUSED(option);
 
 //    qDebug() << "MemoryStatus::paint";
 //    qDebug() << boundingRect();
 
-    QFontMetrics fm(painter->font());
+
+    QFontMetrics fm(m_font);
     m_statusLabelRect = fm.tightBoundingRect(statusLabel());
     m_statusLabelRect.setHeight(boundingRect().height());
 //    qDebug() << m_statusLabelRect;
@@ -73,6 +78,7 @@ void MemoryStatus::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
     QPen textPen(Qt::black);
     painter->fillRect(boundingRect(),QBrush(Qt::white));
     painter->setPen(textPen);
+    painter->setFont(m_font);
 //    qDebug()<<geometry();
     painter->drawText(QRectF(QPoint(5,0),m_statusLabelRect.size()),Qt::AlignLeft|Qt::AlignVCenter,statusLabel());
 
@@ -107,6 +113,35 @@ void MemoryStatus::setUnitInfo(const QString &unitInfo)
 {
     m_unitInfo = unitInfo;
 }
+
+
+void MemoryStatus::transformChanged(const QTransform &transform)
+{
+    qreal vScaling = transform.m22();
+
+    setHeight(DEFAULT_STATUS_HEIGHT/vScaling);
+
+}
+qreal MemoryStatus::height() const
+{
+    return m_height;
+}
+
+void MemoryStatus::setHeight(const qreal &height)
+{
+    m_height = height;
+}
+QFont MemoryStatus::font() const
+{
+    return m_font;
+}
+
+void MemoryStatus::setFont(const QFont &font)
+{
+    m_font = font;
+}
+
+
 
 
 

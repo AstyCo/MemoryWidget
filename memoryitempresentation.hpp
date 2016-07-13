@@ -9,24 +9,26 @@ namespace Memory
 {
     enum MemoryState
     {
-        Empty,
-        Busy,
+        Freed,
+        Written,
         Read,
-        Free,
+        Available,
         StateCount
     };
 }
 using namespace Memory;
 
+QString fixedNumPresentation(long num,int base,long max);
+
 QString MemoryState_to_Qstring(MemoryState state);
-QColor MemoryState_to_QColor(MemoryState state);
+QColor MemoryState_to_QColor(MemoryState state, bool isActive = true);
 
 QString operator+(const QString& qstr, MemoryState status);
 
 
 struct MemoryItemPresentation
 {
-    MemoryItemPresentation(MemoryState status = Empty, int unitId = 0);
+    MemoryItemPresentation(MemoryState status = Freed, int unitId = 0);
 
     MemoryState m_state;
 

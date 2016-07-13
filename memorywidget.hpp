@@ -13,6 +13,7 @@
 #include <QStatusBar>
 #include <QLabel>
 
+class LabelItem;
 
 class MemoryStatus;
 
@@ -26,7 +27,7 @@ public:
 
     int itemPerRow() const;
     void setItemPerRow(int itemPerRow);
-    void setupMatrix(QList<MemoryItem*> records);
+    void setupMatrix(QList<MemoryItem*> mem_items);
 
     bool labels() const;
     void setLabels(bool labels);
@@ -45,6 +46,15 @@ public:
 
     void memoryStatusUpdate(const QRectF& rect = QRectF());
 
+    QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+
+    void removeLabels();
+
+public slots:
+
+    void transformChanged(const QTransform& transform);
+
+
 private:
     int toColumn(int index) const;
     int toRow(int index) const;
@@ -59,6 +69,7 @@ private:
 
     int m_itemPerRow;
     bool m_labels;
+    QList<LabelItem*> m_labelItems;
     qreal m_spacing;
     MemoryStatus* m_memoryStatus;
 };

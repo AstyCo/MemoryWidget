@@ -11,22 +11,16 @@
 
 #include <QDebug>
 
-LabelItem::LabelItem(QGraphicsItem *parent/* = 0*/)
+LabelItem::LabelItem(const QString& label,
+                     QGraphicsItem *parent/* = 0*/,
+                     qreal edgeLength /*= DEFAULT_EDGELENGTH*/,
+                     qreal borderWidth /*= DEFAULT_BORDERWIDTH*/,
+                     const QColor& color)
     : QGraphicsLayoutItem(), QGraphicsItem(parent)
 {
     setGraphicsItem(this);
-    m_edgeLength = DEFAULT_EDGELENGTH;
-    m_borderWidth = DEFAULT_BORDERWIDTH;
-    setColor(DEFAULT_LABELCOLOR);
-    setLabel(DEFAULT_LABEL);
-
-}
-
-LabelItem::LabelItem(const QString& label, int edgeLength, QColor color, qreal borderWidth, QGraphicsItem *parent)
-    : QGraphicsLayoutItem(), QGraphicsItem(parent)
-{
-    m_edgeLength = edgeLength;
-    m_borderWidth = borderWidth;
+    setEdgeLength(edgeLength);
+    setBorderWidth(borderWidth);
     setColor(color);
     setLabel(label);
 }
@@ -40,7 +34,8 @@ LabelItem::~LabelItem()
 void LabelItem::paint(QPainter *painter,
     const QStyleOptionGraphicsItem *option, QWidget *widget /*= 0*/)
 {
-//    Q_UNUSED(widget);
+    Q_UNUSED(option);
+    Q_UNUSED(widget);
 
 
 
@@ -49,6 +44,8 @@ void LabelItem::paint(QPainter *painter,
     QColor squareColor = Qt::white;//scene()->backgroundBrush().color();
     if(getLabel().isEmpty())
         squareColor = GLOBAL_EMPTY_LABEL_COLOR;
+    if(getLabel().isEmpty())
+        qDebug()<<"lb: "<<boundingRect();
 
 //    painter->setRenderHint(QPainter::Antialiasing);
     if(m_borderWidth)
@@ -70,13 +67,15 @@ void LabelItem::paint(QPainter *painter,
 //DRAW TEXT
     if(!m_label.isEmpty())
     {
-//        painter->setRenderHint(QPainter::TextAntialiasing,false);
-//        QFont font = painter->font();
-//        font.setPixelSize(5);
-//        painter->setFont(font);
+        painter->setRenderHint(QPainter::TextAntialiasing,false);
+        QFont font = painter->font();
+        font.setPixelSize(8);
+        painter->setFont(font);
+
+
         QPen textPen(Qt::black);
         painter->setPen(textPen);
-        painter->drawText(QRectF(QPoint(0,0),geometry().size()),Qt::AlignCenter,m_label);
+        painter->drawText(boundingRect(),Qt::AlignCenter,m_label);
     }
 }
 QString LabelItem::getLabel() const
@@ -98,6 +97,26 @@ void LabelItem::setColor(const QColor &color)
 {
     m_color = color;
 }
+int LabelItem::getEdgeLength() const
+{
+    return m_edgeLength;
+}
+
+void LabelItem::setEdgeLength(int edgeLength)
+{
+    m_edgeLength = edgeLength;
+}
+qreal LabelItem::getBorderWidth() const
+{
+    return m_borderWidth;
+}
+
+void LabelItem::setBorderWidth(const qreal &borderWidth)
+{
+    m_borderWidth = borderWidth;
+}
+
+
 
 
 QRectF LabelItem::boundingRect() const

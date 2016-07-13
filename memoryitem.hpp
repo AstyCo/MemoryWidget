@@ -31,6 +31,11 @@ public:
     void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
     void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
 
+    QString toolTip() const;
+    void setToolTip(const QString &toolTip);
+
+    void enableToolTip();
+    void disableToolTip();
 
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 
@@ -39,8 +44,10 @@ public:
 
     Memory::MemoryState state() const;
     QColor color() const;
-    int parentUnitId() const;
+//    int parentUnitId() const;
 
+//    long parentUnitStart() const;
+//    long parentUnitFinish() const;
 
 
     long index() const;
@@ -62,6 +69,10 @@ private:
     long m_index;
 
     MemoryUnit* m_parentUnit;
+
+    bool m_isActive;    ///< Используется для затемнения
+
+    bool m_isMarked;    ///< Используется для интерактивного выбора области памяти
 
 };
 
