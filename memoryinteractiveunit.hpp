@@ -20,6 +20,9 @@ public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
         QWidget *widget = 0);
 
+    bool inRange(long index) const;
+
+
     long start() const;
     long finish() const;
     long size() const;
@@ -28,7 +31,7 @@ public:
 
     void setRange(long start, long finish);
 
-    void setEnable(bool value);
+    void setShowBorders(bool value);
 
     long memorySize() const;
 
@@ -51,7 +54,9 @@ private:
     QList<MemoryItem*>* m_items;
     long m_start, m_finish;
 
-    bool enable;
+    bool m_showBorders;
+
+    bool m_initialized;
 
 };
 

@@ -17,14 +17,20 @@ MemoryItem::MemoryItem(long index,qreal edgeLength,qreal borderWidth,QGraphicsIt
 
     m_parentUnit = dynamic_cast<MemoryUnit*>(parent);
         // NULL if not MemoryUnit*
+
+    m_scene = dynamic_cast<MemoryScene*>(scene());
+        // NULL if not MemoryScene*
+    if(!m_scene)
+        qDebug() << "not MemoryScene*";
+
     setEdgeLength(edgeLength);
     setBorderWidth(borderWidth);
+    disableSizeModify();
 
     setFlags(ItemIsSelectable);
     setAcceptsHoverEvents(true);
 
     enableToolTip();
-
 
 }
 
@@ -39,66 +45,121 @@ void MemoryItem::paint(QPainter *painter,
 {
     Q_UNUSED(widget);
 
-    QColor fillColor = (option->state & QStyle::State_Selected) ? color().dark(150) : color();
-    if (option->state & QStyle::State_MouseOver)
-    {
-        //fillColor = fillColor.light(150);
-        fillColor = fillColor.blackF();
-    }
+    if(zValue())
+        qDebug() <<zValue();
 
-    QRectF squareItem( m_borderWidth, m_borderWidth, m_edgeLength, m_edgeLength);
-    QColor squareColor = fillColor;
-
+    painter->setCompositionMode(QPainter::CompositionMode_SourceOver);
     painter->setPen(Qt::NoPen);
 
-    if(m_borderWidth)
+    if(isHighlighted())
+        drawHighlighted(painter,option,widget);
+    else
+        drawBlurred(painter,option,widget);
+
+}
+
+void MemoryItem::drawHighlighted(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+    Q_UNUSED(widget);
+
+
+    if(borderWidth())
     {
-        QRectF extSquareItem( 0, 0, m_edgeLength+2*m_borderWidth, m_edgeLength+2*m_borderWidth);
+        QRectF extSquareItem( 0, 0, edgeLength()+2*borderWidth(), edgeLength()+2*borderWidth());
         QColor extSquareColor = GLOBAL_BORDER_COLOR;
         QPainterPath externalFigure;
         externalFigure.addRect(extSquareItem);
+        painter->setOpacity(0.5);
         painter->fillPath(externalFigure, extSquareColor);
         painter->drawPath(externalFigure);
+        painter->setOpacity(1);
     }
+
+
+    QColor fillColor = (option->state & QStyle::State_Selected) ? color().dark(150) : color();
+//    if (option->state & QStyle::State_MouseOver)
+//    {
+//        fillColor = fillColor.lighter(115);
+//    }
+
+    QRectF itemRect( borderWidth(), borderWidth(), edgeLength(), edgeLength());
+    QColor squareColor = fillColor;
+
+//    const QBrush brush(fillColor);
+//    qDrawShadePanel(painter,itemRect.toRect(),scene()->palette(),true,2,&brush);
+
+
+    QPainterPath path;
+    path.addRect(itemRect);
+    painter->fillPath(path, squareColor);
+    painter->drawPath(path);
+}
+
+void MemoryItem::drawBlurred(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+    Q_UNUSED(widget);
+
+
+    if(borderWidth())
+    {
+        QRectF extSquareItem( 0, 0, edgeLength()+2*borderWidth(), edgeLength()+2*borderWidth());
+        QColor extSquareColor = GLOBAL_BORDER_COLOR;
+        QPainterPath externalFigure;
+        externalFigure.addRect(extSquareItem);
+        painter->setOpacity(0.2);
+        painter->fillPath(externalFigure, extSquareColor);
+        painter->drawPath(externalFigure);
+        painter->setOpacity(1);
+    }
+
+
+    QColor fillColor = (option->state & QStyle::State_Selected) ? color().dark(150) : color();
+//    if (option->state & QStyle::State_MouseOver)
+//    {
+//        fillColor = fillColor.light(150);
+//    }
+
+    QRectF squareItem( borderWidth(), borderWidth(), edgeLength(), edgeLength());
+    QColor squareColor = fillColor;
     QPainterPath path;
     path.addRect(squareItem);
     painter->fillPath(path, squareColor);
     painter->drawPath(path);
+}
 
+MemoryUnit *MemoryItem::parentUnit() const
+{
+    return m_parentUnit;
+}
+
+void MemoryItem::setParentUnit(MemoryUnit *parentUnit)
+{
+    m_parentUnit = parentUnit;
 }
 
 void MemoryItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
 {
-    MemoryScene* p_scene = dynamic_cast<MemoryScene*>(scene());
-    if(!p_scene)
+    if(!m_scene)
         return QGraphicsItem::hoverEnterEvent(event);
 
-//    if(parentUnitId())
-//        setParentUnitSelected(true);
+    m_scene->setItemInfo(QString::number(index()));
 
-    p_scene->setItemInfo(QString::number(index()));
-//    p_scene->setUnitInfo(QString(   QObject::tr("Unit Group Id: ")
-//                                    +QString::number(parentUnitId())
-//                                    +QString(QObject::tr("  Unit State: "))
-//                                    +state()
-//                                    +QObject::tr(" Unit Memory: ")
-//                                    +"0x"+fixedNumPresentation(parentUnitStart(),16,2047)
-//                                    +" - 0x"+fixedNumPresentation(parentUnitFinish(),16,2047)
-//                         ));
-    p_scene->showInteractiveRange(index(),index()+100);
+    m_scene->showInteractiveRange(index(),index()+100);
+    m_scene->setStartHighlight(index());
+
 
     return QGraphicsItem::hoverEnterEvent(event);
 }
 
 void MemoryItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
 {
-//    setParentUnitSelected(false);
-    MemoryScene* p_scene = dynamic_cast<MemoryScene*>(scene());
-    if(!p_scene)
+    if(!m_scene)
         return QGraphicsItem::hoverLeaveEvent(event);
 
-    p_scene->hideInteractiveRange();
-    p_scene->update();
+    m_scene->hideInteractiveRange();
+    m_scene->clearEnabledUnits();
+    m_scene->update();
+
     return QGraphicsItem::hoverLeaveEvent(event);
 }
 
@@ -171,12 +232,12 @@ MemoryState MemoryItem::state() const
 
 QColor MemoryItem::color() const
 {
-    if(m_parentUnit)
-    {
-        return m_parentUnit->color();
-    }
+    bool highlightedItem = isHighlighted();
 
-    return MemoryState_to_QColor(Memory::Freed);
+    if(m_parentUnit)
+        return MemoryState_to_QColor(m_parentUnit->state(),highlightedItem);
+
+    return MemoryState_to_QColor(Memory::Freed,highlightedItem);
 }
 
 //int MemoryItem::parentUnitId() const
@@ -213,35 +274,67 @@ void MemoryItem::setIndex(long index)
 {
     m_index = index;
 }
-int MemoryItem::edgeLength() const
+qreal MemoryItem::edgeLength() const
 {
+    if(m_sizeModifying)
+    {
+        return m_edgeLength*m_sizeModify;
+    }
     return m_edgeLength;
 }
 
-void MemoryItem::setEdgeLength(int edgeLength)
+void MemoryItem::setEdgeLength(qreal edgeLength)
 {
+    if(m_edgeLength == edgeLength)
+        return;
     m_edgeLength = edgeLength;
+    updateGeometry();
 }
 qreal MemoryItem::borderWidth() const
 {
+    if(m_sizeModifying)
+    {
+        return m_borderWidth*m_sizeModify;
+    }
     return m_borderWidth;
 }
 
 void MemoryItem::setBorderWidth(const qreal &borderWidth)
 {
+    if(borderWidth==m_borderWidth)
+        return;
     m_borderWidth = borderWidth;
+    updateGeometry();
+}
+
+void MemoryItem::disableSizeModify()
+{
+    m_sizeModifying = false;
+    m_sizeModify = 1.0;
+}
+
+qreal MemoryItem::sizeModify() const
+{
+    return m_sizeModify;
+}
+
+void MemoryItem::setSizeModify(qreal sizeModify)
+{
+    m_sizeModifying = true;
+    m_sizeModify = sizeModify;
+    updateGeometry();
+}
+
+bool MemoryItem::isHighlighted() const
+{
+    return (!(m_scene->m_highlightMode))
+            || m_scene->inHighlightRange(index());
 }
 
 
-
-//QColor MemoryItem::color() const
-//{
-//    return m_color;
-//}
-
 QRectF MemoryItem::boundingRect() const
 {
-    return QRectF( 0, 0, m_edgeLength + 2*m_borderWidth, m_edgeLength + 2*m_borderWidth);
+    return QRectF( 0, 0, edgeLength() + 2*borderWidth(), edgeLength() + 2*borderWidth());
     //    return QRectF(QPointF(0,0), geometry().size());
 }
 
@@ -249,7 +342,7 @@ QRectF MemoryItem::boundingRect() const
 //{
 //    QPainterPath path;
 //    path.addRect(boundingRect());
-// //    path.addRect(m_borderWidth,m_borderWidth,m_edgeLength,m_edgeLength);
+// //    path.addRect(borderWidth(),borderWidth(),edgeLength(),edgeLength());
 //    return path;
 //}
 
@@ -260,13 +353,18 @@ void MemoryItem::setGeometry(const QRectF &geom)
     setPos(geom.topLeft());
 }
 
+//QRectF MemoryItem::geometry() const
+//{
+//    return QGraphicsLayoutItem::geometry();
+//}
+
 QSizeF MemoryItem::sizeHint(Qt::SizeHint which, const QSizeF &constraint) const
 {
     switch (which) {
     case Qt::MinimumSize:
     case Qt::PreferredSize:
     case Qt::MaximumSize:
-        return QSizeF(m_edgeLength + 2*m_borderWidth,m_edgeLength + 2*m_borderWidth);
+        return QSizeF(edgeLength() + 2*borderWidth(),edgeLength() + 2*borderWidth());
     default:
         break;
     }

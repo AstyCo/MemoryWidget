@@ -68,7 +68,7 @@ void MemoryWidget::setupMatrix(QList<MemoryItem*> mem_items)
     removeLabels();
     QGraphicsGridLayout * gridLayout = new QGraphicsGridLayout;
 
-    gridLayout->setContentsMargins(0, 0, 0, 0);
+    gridLayout->setContentsMargins(m_margins, m_margins, m_margins, m_margins);
     gridLayout->setSpacing(m_spacing);
 
     if(labels())
@@ -119,6 +119,16 @@ void MemoryWidget::setupMatrix(QList<MemoryItem*> mem_items)
 QGraphicsLayout *MemoryWidget::layout()
 {
     return QGraphicsWidget::layout();
+}
+
+qreal MemoryWidget::margins() const
+{
+    return m_margins;
+}
+
+void MemoryWidget::setMargins(const qreal &margins)
+{
+    m_margins = margins;
 }
 
 qreal MemoryWidget::spacing() const
@@ -196,8 +206,8 @@ void MemoryWidget::removeLabels()
 {
     foreach(LabelItem* item, m_labelItems)
     {
-        item->setParentItem(NULL);
         scene()->removeItem(item);
+        item->setParentItem(NULL);
         m_labelItems.removeOne(item);
     }
 }

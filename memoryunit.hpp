@@ -8,6 +8,7 @@
 #include <QPen>
 
 class MemoryItem;
+class MemoryScene;
 
 class MemoryUnit : public QGraphicsItem
 {
@@ -50,6 +51,8 @@ public:
     void removeTheLast(long until);
     void updateParenthesis();
 
+    qreal extraSize() const;
+
 
 private:
     void rebuildShape();
@@ -62,12 +65,15 @@ private:
 
     int m_unitId;
     Memory::MemoryState m_state;
+    MemoryScene* m_scene;
 
     QPainterPath m_shapeBorder;
     QPen m_borderPen;
 
     QList<MemoryItem*> m_items;
     long m_start, m_finish;
+
+    int rand;
 
 };
 

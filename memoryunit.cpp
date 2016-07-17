@@ -16,17 +16,25 @@ MemoryUnit::MemoryUnit(QGraphicsItem *parent /*= 0*/)
     : QGraphicsItem(parent)
 {
 //    setFlag(QGraphicsItem::ItemHasNoContents);
+
+    rand = qrand()%2;
+
+    m_scene = dynamic_cast<MemoryScene*>(scene());
+    if(!m_scene)
+        qDebug() << "Not MemoryScene*";
+
     setUnitSelected(false);
     setAcceptsHoverEvents(true);
 
-    setZValue(1000);
+    setZValue(1);
 
-    m_borderPen=QPen(QBrush(Qt::blue), spacing() ,Qt::SolidLine,Qt::SquareCap,Qt::MiterJoin);
+    m_borderPen=QPen(QBrush(QColor(rand?Qt::red:Qt::blue)/*.lighter()*/), extraSize()*2 ,Qt::SolidLine,Qt::SquareCap,Qt::MiterJoin);
+
 }
 
 QRectF MemoryUnit::boundingRect() const
 {
-    return m_shapeBorder.boundingRect().adjusted(-spacing()*1.5,-spacing()*1.5,spacing()*1.5,spacing()*1.5);
+    return m_shapeBorder.boundingRect().adjusted(-extraSize(),-extraSize(),extraSize(),extraSize());
 }
 
 QPainterPath MemoryUnit::shape() const
@@ -39,19 +47,19 @@ void MemoryUnit::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     Q_UNUSED(option);
     Q_UNUSED(widget);
 
-
-
-
-
     if(!unitSelected())
         // Don't draw
         return;
 
 //    QPen pen(QBrush(Qt::blue),DEFAULT_SPACING ,Qt::SolidLine,Qt::SquareCap,Qt::MiterJoin);
+
+    painter->setCompositionMode(QPainter::CompositionMode_Multiply);
+
     painter->setPen(m_borderPen);
     painter->setOpacity(1);
     painter->drawPath(m_shapeBorder);
 //    qDebug() << m_shapeBorder;
+
 }
 
 int MemoryUnit::unitId() const
@@ -149,8 +157,6 @@ void MemoryUnit::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
     MemoryScene* p_scene = dynamic_cast<MemoryScene*>(scene());
     if(!p_scene)
         return;
-
-//    qDebug() << "hoverEnter";
     setUnitSelected(true);
 
     p_scene->setUnitInfo(QString(   QObject::tr("Unit Group Id: ")
@@ -162,11 +168,16 @@ void MemoryUnit::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
                                     +" - 0x"+fixedNumPresentation(finish(),16,2047)
                          ));
 
+    setZValue(100);
+
+    update();
+
     return QGraphicsItem::hoverEnterEvent(event);
 }
 
 void MemoryUnit::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
 {
+    setZValue(0);
     setUnitSelected(false);
     return QGraphicsItem::hoverLeaveEvent(event);
 }
@@ -342,6 +353,11 @@ void MemoryUnit::updateParenthesis()
         m_items[i]->setParentItem(this);
     }
     rebuildShape();
+}
+
+qreal MemoryUnit::extraSize() const
+{
+    return spacing()/2 + m_scene->itemBorder();
 }
 
 

@@ -128,7 +128,7 @@ QColor MemoryState_to_QColor(MemoryState state, bool isActive /*= true*/)
             qDebug() << "MemoryState_to_QColor() default case";
             return Qt::black;
         }
-        return result.light();
+        return result.lighter(113);
     }
 //    {
 //        switch(state)

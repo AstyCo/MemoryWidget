@@ -13,12 +13,9 @@ public:
 
     void resizeEvent(QResizeEvent *);
 
+
+
 private:
-
-    qreal m_viewRatio;
-
-    qreal m_itemEdgeLength;
-    qreal m_itemBorderWidth;
 
     MemoryScene *m_memoryScene;
 

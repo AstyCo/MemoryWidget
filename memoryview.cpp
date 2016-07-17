@@ -11,19 +11,17 @@ MemoryView::MemoryView(QGraphicsScene * scene, QWidget * parent)
     setContentsMargins(0, 0, 0, 0);
 
     m_memoryScene=dynamic_cast<MemoryScene*>(scene);
+    m_memoryScene->setParent(this);
+
+
+    resize(1000,1000);
+
+
     if(!m_memoryScene)
     {
         qWarning(QObject::tr("MemoryView should be installed on MemoryScene").toLatin1().data());
     }
 
-    qreal height = scene->sceneRect().height(),
-          width = scene->sceneRect().width();
-
-    if(height)
-    {
-        m_viewRatio = width/height;
-    }
-    else m_viewRatio = 1.0;
 
     setRenderHint(QPainter::Antialiasing,true);
 
@@ -31,20 +29,17 @@ MemoryView::MemoryView(QGraphicsScene * scene, QWidget * parent)
 
 void MemoryView::resizeEvent(QResizeEvent *event)
 {
-    qDebug() << m_viewRatio;
+    m_memoryScene->viewResized(event->size());
+    if(isTransformed())
+        m_memoryScene->transformChanged(transform());
 
-//    fitInView(scene()->sceneRect(),Qt::KeepAspectRatio);
+    ensureVisible(m_memoryScene->sceneRect().adjusted(-5,-5,5,5),50,50);
 
-    QTransform m = transform();
-
-    QSizeF newSize = event->size();
-    m_memoryScene->viewResized(newSize);
-    m_memoryScene->transformChanged(transform());
-
-    qDebug()<< newSize;
+    qDebug()<< event->size();
     qDebug()<< sceneRect();
-    qDebug()<<m_memoryScene->m_memoryWidget->boundingRect();
 
     return QGraphicsView::resizeEvent(event);
 }
+
+
 

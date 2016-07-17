@@ -11,6 +11,7 @@
 #include <QPainterPath>
 
 class MemoryUnit;
+class MemoryScene;
 
 class MemoryItem : public QGraphicsLayoutItem, public QGraphicsItem
 {
@@ -28,6 +29,7 @@ public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
         QWidget *widget = 0);
 
+
     void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
     void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
 
@@ -37,6 +39,8 @@ public:
     void enableToolTip();
     void disableToolTip();
 
+
+
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 
 
@@ -44,26 +48,42 @@ public:
 
     Memory::MemoryState state() const;
     QColor color() const;
-//    int parentUnitId() const;
-
-//    long parentUnitStart() const;
-//    long parentUnitFinish() const;
-
 
     long index() const;
     void setIndex(long index);
 
-    int edgeLength() const;
-    void setEdgeLength(int edgeLength);
+    qreal edgeLength() const;
+    void setEdgeLength(qreal edgeLength);
 
     qreal borderWidth() const;
     void setBorderWidth(const qreal &borderWidth);
 
+    void disableSizeModify();
+
+
+    qreal sizeModify() const;
+    void setSizeModify(qreal sizeModify);
+
+    bool isHighlighted() const;
+
+    MemoryUnit *parentUnit() const;
+    void setParentUnit(MemoryUnit *parentUnit);
+
 public slots:
-    //    void setColor(const QColor& newColor);
 
 private:
-    int m_edgeLength;
+
+    void drawHighlighted(QPainter *painter, const QStyleOptionGraphicsItem *option,
+                         QWidget *widget = 0);
+    void drawBlurred(QPainter *painter, const QStyleOptionGraphicsItem *option,
+                         QWidget *widget = 0);
+
+
+private:
+
+    MemoryScene* m_scene;
+
+    qreal m_edgeLength;
     qreal m_borderWidth;
 
     long m_index;
@@ -73,6 +93,9 @@ private:
     bool m_isActive;    ///< Используется для затемнения
 
     bool m_isMarked;    ///< Используется для интерактивного выбора области памяти
+
+    qreal m_sizeModify;
+    bool m_sizeModifying;
 
 };
 

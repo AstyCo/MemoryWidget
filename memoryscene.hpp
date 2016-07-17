@@ -43,7 +43,7 @@ public:
 
 
     qreal itemBorder() const;
-    void setItemBorder(const qreal &itemBorder);
+    void setItemBorder(qreal itemBorder);
 
     long memorySize() const;
     void setMemorySize(long memorySize);
@@ -53,7 +53,19 @@ public:
     void showInteractiveRange(long start, long finish);
     void hideInteractiveRange();
 
+    qreal itemSize() const;
+
     void updateParenthesis();
+
+    friend bool MemoryItem::isHighlighted() const;
+    friend void MemoryItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
+
+    bool highlightMode() const;
+    void setHighlightMode(bool highlightMode);
+
+    void setLengthHighlight(long lengthHighlight);
+
+    void setStartHighlight(long startHighlight);
 
 public slots:
     void transformChanged(const QTransform& transform);
@@ -66,27 +78,35 @@ protected:
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);
 
+    void drawForeground(QPainter *painter, const QRectF &rect);
+
 private:
+    void clearEnabledUnits();
+
     void clearLastSelected();
     void setLastSelected(MemoryItem* p_mem);
     int  itemIndex(QGraphicsItem* item) const;
     void memoryStatusUpdate(const QRectF& rect = QRectF());
+    bool inHighlightRange(long index) const;
 
-public:
+private:
     int m_lastSelectedIndex;
     MemoryItem* m_lastSelected;
     MemoryWidget* m_memoryWidget;
+
     MemoryInteractiveUnit* m_interactiveUnit;
+
 
     QList<MemoryUnit*> m_units;
     QList<MemoryItem*> m_items;
-    QList<MemoryUnit*> m_itemsParents;
+
     QMap<int , MemoryUnit*> m_unit_by_unitId;
 
-    qreal m_itemEdge;
-    qreal m_itemBorder;
-
     long m_memorySize;
+
+    bool m_highlightMode;
+    long m_startHighlight;
+    long m_lengthHighlight;
 
     friend class MemoryInteractiveUnit;
 };

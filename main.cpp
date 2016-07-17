@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     MemoryScene scene;
     mem_scene = &scene;
 
-    scene.setBackgroundBrush(QBrush(Qt::gray));
+    scene.setBackgroundBrush(QBrush(Qt::white));
 
 
     MemoryView view(&scene);
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 
     view.setFrameStyle(0);
     view.setAlignment(Qt::AlignLeft | Qt::AlignTop);
-//    view.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    view.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
 #if defined(Q_WS_S60) || defined(Q_WS_MAEMO_5) || defined(Q_WS_SIMULATOR)
     view.showMaximized();

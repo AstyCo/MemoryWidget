@@ -50,6 +50,9 @@ public:
 
     void removeLabels();
 
+    qreal margins() const;
+    void setMargins(const qreal &margins);
+
 public slots:
 
     void transformChanged(const QTransform& transform);
@@ -71,7 +74,10 @@ private:
     bool m_labels;
     QList<LabelItem*> m_labelItems;
     qreal m_spacing;
+    qreal m_margins;
     MemoryStatus* m_memoryStatus;
+
+    friend class MemoryScene;
 };
 
 #endif // MEMORYWIDGET_HPP

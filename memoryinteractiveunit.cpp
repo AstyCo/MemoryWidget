@@ -22,14 +22,16 @@ MemoryInteractiveUnit::MemoryInteractiveUnit(MemoryScene* scene,QGraphicsItem *p
     {
         qDebug() << "MemoryInteractiveUnit no scene";
     }
+
+    m_initialized = false;
+
     setAcceptsHoverEvents(false);
-    setEnable(false);
+    setShowBorders(false);
 
     m_items = &(scene->m_items);
 
-    setZValue(1000);// OVERLAY
+    m_borderPen=QPen(QBrush(Qt::red), spacing()+5 ,Qt::SolidLine ,Qt::SquareCap,Qt::MiterJoin);
 
-    m_borderPen=QPen(QBrush(Qt::red), spacing() ,Qt::SolidLine ,Qt::SquareCap,Qt::MiterJoin);
 }
 
 QRectF MemoryInteractiveUnit::boundingRect() const
@@ -47,7 +49,7 @@ void MemoryInteractiveUnit::paint(QPainter *painter, const QStyleOptionGraphicsI
     Q_UNUSED(option);
     Q_UNUSED(widget);
 
-    if(!enable)
+    if(!m_showBorders)
         return;
 
 
@@ -56,6 +58,11 @@ void MemoryInteractiveUnit::paint(QPainter *painter, const QStyleOptionGraphicsI
     painter->setPen(m_borderPen);
     painter->setOpacity(1);
     painter->drawPath(m_shapeBorder);
+}
+
+bool MemoryInteractiveUnit::inRange(long index) const
+{
+    return m_initialized&&(index>=m_start && index <=m_finish);
 }
 
 
@@ -225,9 +232,9 @@ void MemoryInteractiveUnit::setShapeBorder(const QPainterPath &shapeBorder)
     m_shapeBorder = shapeBorder;
 }
 
-void MemoryInteractiveUnit::setEnable(bool value)
+void MemoryInteractiveUnit::setShowBorders(bool value)
 {
-    enable = value;
+    m_showBorders = value;
     update();
 }
 
@@ -249,13 +256,13 @@ void MemoryInteractiveUnit::setRange(long start, long finish)
     }
     if(start<0||finish>=memorySize())
     {
-        setEnable(false);
+        setShowBorders(false);
         return;
     }
     setStart(start);
     setFinish(finish);
 
-    setEnable(true);
+    setShowBorders(true);
 
     rebuildShape();
 }

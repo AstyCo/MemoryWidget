@@ -1,4 +1,5 @@
 #include "memoryscene.hpp"
+#include "memoryview.hpp"
 
 #include "memoryinteractiveunit.hpp"
 
@@ -6,6 +7,10 @@
 
 #include <QApplication>
 #include <QDebug>
+
+#include <QtCore/qmath.h>
+
+qreal qSqrt(qreal);
 
 
 MemoryScene::MemoryScene( QObject * parent)
@@ -18,15 +23,22 @@ MemoryScene::MemoryScene( QObject * parent)
 
     m_items.clear();
     m_units.clear();
-    m_lastSelected=NULL;
+    m_lastSelected = NULL;
+    m_interactiveUnit = NULL;
+    m_highlightMode = true;
+    setLengthHighlight(100);
+
 
     m_memoryWidget = new MemoryWidget;
 
-    m_memoryWidget->setLabels(true);
+    m_memoryWidget->setPos(5,5);
+
+    m_memoryWidget->setLabels(false);
 
     addItem(m_memoryWidget);
 
-    m_memoryWidget->setSpacing(0);
+    m_memoryWidget->setSpacing(DEFAULT_SPACING);
+    m_memoryWidget->setMargins(DEFAULT_MARGINS);
     m_memoryWidget->setItemPerRow(64);
 
     QList<MemoryItemPresentation> records;
@@ -63,6 +75,7 @@ MemoryScene::MemoryScene( QObject * parent)
     }
 
 
+
     init(records,2048);
 }
 
@@ -86,7 +99,6 @@ void MemoryScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
     {
         return;
     }
-
     setLastSelected(p_mem);
     return QGraphicsScene::mousePressEvent(event);
 
@@ -153,6 +165,21 @@ void MemoryScene::keyReleaseEvent(QKeyEvent *event)
     return QGraphicsScene::keyReleaseEvent(event);
 }
 
+void MemoryScene::drawForeground(QPainter *painter, const QRectF &rect)
+{
+    if(m_interactiveUnit)
+        m_interactiveUnit->update();
+    foreach(MemoryUnit* unit, m_units)
+        unit->update();
+    return QGraphicsScene::drawForeground(painter,rect);
+}
+
+void MemoryScene::clearEnabledUnits()
+{
+    foreach(MemoryUnit* unit,m_units)
+        unit->setUnitSelected(false);
+}
+
 void MemoryScene::init(const QList<MemoryItemPresentation> &mem_it_list,long memSize)
 {
     MemoryUnit * p_memUnit = NULL;
@@ -162,7 +189,6 @@ void MemoryScene::init(const QList<MemoryItemPresentation> &mem_it_list,long mem
     for(int i = 0; i<memorySize(); ++i)
     {
         m_items.append(new MemoryItem(i,itemEdge(),itemBorder(),m_memoryWidget));
-        m_itemsParents.append(NULL);
     }
 
 
@@ -181,8 +207,7 @@ void MemoryScene::init(const QList<MemoryItemPresentation> &mem_it_list,long mem
 
     updateParenthesis();
 
-    m_interactiveUnit = new MemoryInteractiveUnit(this,m_memoryWidget);
-
+//    m_interactiveUnit = new MemoryInteractiveUnit(this,m_memoryWidget);
 }
 
 MemoryUnit* MemoryScene::newUnit(int unitId)
@@ -245,20 +270,20 @@ void MemoryScene::setItemPerRow(int newItemPerRow)
     m_memoryWidget->setItemPerRow(newItemPerRow);
     m_memoryWidget->setupMatrix(m_items);
     updateParenthesis();
-
 }
 
 qreal MemoryScene::itemEdge() const
 {
-    return m_itemEdge;
+    if(m_items.isEmpty())
+        return DEFAULT_EDGELENGTH;
+    return m_items[0]->edgeLength();
 }
 
 void MemoryScene::setItemEdge(qreal newEdgeLength)
 {
-    m_itemEdge = newEdgeLength;
     foreach(MemoryItem* item, m_items)
     {
-        item->setEdgeLength(m_itemEdge);
+        item->setEdgeLength(newEdgeLength);
     }
 }
 
@@ -291,6 +316,41 @@ void MemoryScene::memoryStatusUpdate(const QRectF &rect)
     m_memoryWidget->memoryStatusUpdate(rect);
 }
 
+bool MemoryScene::inHighlightRange(long index) const
+{
+    return m_startHighlight <= index && index < m_startHighlight+m_lengthHighlight;
+}
+
+void MemoryScene::setStartHighlight(long startHighlight)
+{
+    if(startHighlight+m_lengthHighlight>m_memorySize)
+        return;
+    m_startHighlight = startHighlight;
+    for(int i = m_startHighlight; i<m_startHighlight+m_lengthHighlight; ++i)
+    {
+        MemoryUnit* pmem_unit = m_items[i]->parentUnit();
+        if(!pmem_unit)
+            continue;
+        pmem_unit->setUnitSelected(true);
+    }
+}
+
+
+void MemoryScene::setLengthHighlight(long lengthHighlight)
+{
+    m_lengthHighlight = lengthHighlight;
+}
+
+bool MemoryScene::highlightMode() const
+{
+    return m_highlightMode;
+}
+
+void MemoryScene::setHighlightMode(bool highlightMode)
+{
+    m_highlightMode = highlightMode;
+}
+
 void MemoryScene::transformChanged(const QTransform &transform)
 {
     m_memoryWidget->transformChanged(transform);
@@ -307,30 +367,37 @@ void MemoryScene::setMemorySize(long memorySize)
 
 void MemoryScene::viewResized(QSizeF viewSize)
 {
+    qDebug()<<"viewResized";
+
     qreal viewWidth = viewSize.width();
 
     int newItemPerRow = (viewWidth-spacing())
-                              /(spacing()+itemEdge()+2*itemBorder())
+                              /(itemSize())
                         - ((m_memoryWidget->labels())?1:0);
-
-
-
 
     if(itemPerRow()!=newItemPerRow)
         setItemPerRow(newItemPerRow);
 
-    setSceneRect(m_memoryWidget->geometry());
-
+    setSceneRect(itemsBoundingRect());
 }
 
 void MemoryScene::showInteractiveRange(long start, long finish)
 {
+    if(!m_interactiveUnit)
+        return;
     m_interactiveUnit->setRange(start,finish);
 }
 
 void MemoryScene::hideInteractiveRange()
 {
-    m_interactiveUnit->setEnable(false);
+    if(!m_interactiveUnit)
+        return;
+    m_interactiveUnit->setShowBorders(false);
+}
+
+qreal MemoryScene::itemSize() const
+{
+    return spacing()+itemEdge()+2*itemBorder();
 }
 
 void MemoryScene::updateParenthesis()
@@ -343,12 +410,13 @@ void MemoryScene::updateParenthesis()
 
 qreal MemoryScene::itemBorder() const
 {
-    return m_itemBorder;
+    if(m_items.isEmpty())
+        return DEFAULT_BORDERWIDTH;
+    return m_items[0]->borderWidth();
 }
 
-void MemoryScene::setItemBorder(const qreal &itemBorder)
+void MemoryScene::setItemBorder(qreal itemBorder)
 {
-    m_itemBorder = itemBorder;
     foreach(MemoryItem* item,m_items)
         item->setBorderWidth(itemBorder);
 }
